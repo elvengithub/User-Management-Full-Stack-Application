@@ -1,0 +1,78 @@
+{
+  "development": {
+    "database": {
+      "dialect": "mysql",
+      "host": "153.92.15.31",
+      "port": 3306,
+      "username": "u875409848_diaz",
+      "password": "9T2Z5$3UKkgSYzE",
+      "database": "u875409848_diaz",
+      "timezone": "+00:00",
+      "define": {
+        "freezeTableName": false,
+        "timestamps": true,
+        "createdAt": "created",
+        "updatedAt": "updated"
+      },
+      "dialectOptions": {
+        "connectTimeout": 60000
+      }
+    },
+    "secret": "STARTTLS_DEV_SECRET",
+    "emailFrom": "info@example.com",
+    "smtpOptions": {
+      "host": "smtp.example.com",
+      "port": 465,
+      "secure": true,
+      "auth": {
+        "user": null,
+        "pass": null
+      },
+      "tls": {
+        "rejectUnauthorized": false
+      },
+      "debug": true,
+      "logger": true,
+      "disableFileAccess": true,
+      "disableUrlAccess": true
+    }
+  },
+  "production": {
+    "database": {
+      "dialect": "mysql",
+      "host": "153.92.15.31",
+      "port": 3306,
+      "username": "u875409848_diaz",
+      "password": "9T2Z5$3UKkgSYzE",
+      "database": "u875409848_diaz",
+      "timezone": "+00:00",
+      "define": {
+        "freezeTableName": false,
+        "timestamps": true,
+        "createdAt": "created",
+        "updatedAt": "updated"
+      },
+      "dialectOptions": {
+        "connectTimeout": 60000
+      }
+    },
+    "secret": "STARTTLS",
+    "emailFrom": "info@example.com",
+    "smtpOptions": {
+      "host": "smtp.example.com",
+      "port": 465,
+      "secure": true,
+      "auth": {
+        "user": null,
+        "pass": null
+      },
+      "tls": {
+        "rejectUnauthorized": false
+      },
+      "debug": true,
+      "logger": true,
+      "disableFileAccess": true,
+      "disableUrlAccess": true
+    }
+  }
+}
