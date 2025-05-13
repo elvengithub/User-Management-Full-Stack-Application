@@ -1,0 +1,38 @@
+<div class="app-container" [ngClass]="{ 'bg-light': account }">
+    <!-- main nav -->
+    <nav class="navbar navbar-expand navbar-dark bg-dark" *ngIf="account">
+      <div class="navbar-nav">
+        <a class="nav-item nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
+        <a class="nav-item nav-link" routerLink="/employees" routerLinkActive="active">Employees</a>
+        <a class="nav-item nav-link" routerLink="/departments" routerLinkActive="active">Departments</a>
+        <a class="nav-item nav-link" routerLink="/requests" routerLinkActive="active">Requests</a>
+        <a class="nav-item nav-link" routerLink="/workflows" routerLinkActive="active">Workflows</a>
+        <a class="nav-item nav-link" routerLink="/profile" routerLinkActive="active">Profile</a>
+        <a class="nav-item nav-link" routerLink="/admin" routerLinkActive="active" *ngIf="account?.role === Role.Admin">Admin</a>
+        <button class="btn btn-link nav-item nav-link" (click)="logout()">Logout</button>
+      </div>
+      <!-- Environment indicator visible only during development -->
+      <div class="ms-auto" *ngIf="!isProduction">
+        <span class="badge bg-info text-white">{{detectedEnv}} API</span>
+      </div>
+    </nav>
+  
+    <!-- subnav router outlet -->
+    <router-outlet name="subnav"></router-outlet>
+  
+    <!-- global alert -->
+    <alert></alert>
+  
+    <!-- main router outlet -->
+    <div class="container mt-4">
+      <router-outlet></router-outlet>
+    </div>
+</div>
+
+<!-- Footer -->
+<footer *ngIf="account">
+    <div class="footer-content">
+        <p>User Management System &copy; 2023</p>
+    </div>
+</footer>
+  
