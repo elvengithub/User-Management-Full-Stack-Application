@@ -190,6 +190,12 @@ async function _delete(req, res, next) {
 
 async function transfer(req, res, next) {
     try {
+        console.log('Transfer request received:', {
+            employeeId: req.params.id,
+            newDepartmentId: req.body.departmentId,
+            body: req.body
+        });
+        
         const employee = await db.Employee.findByPk(req.params.id);
         if (!employee) throw new Error('Employee not found');
         
@@ -204,10 +210,15 @@ async function transfer(req, res, next) {
         let newDepartment = null;
         if (req.body.departmentId) {
             newDepartment = await db.Department.findByPk(req.body.departmentId);
+            if (!newDepartment) {
+                throw new Error('New department not found');
+            }
+        } else {
+            throw new Error('New department ID is required');
         }
         
         // Check if department has actually changed
-        if (oldDepartmentId === req.body.departmentId) {
+        if (oldDepartmentId === parseInt(req.body.departmentId)) {
             return res.json({
                 message: 'Employee is already in this department',
                 departmentId: req.body.departmentId,
@@ -218,17 +229,37 @@ async function transfer(req, res, next) {
         // Update employee
         await employee.update({ departmentId: req.body.departmentId });
         
-        // Let frontend handle the workflow creation
+        // Create a workflow entry for the transfer
+        await db.Workflow.create({
+            employeeId: employee.id,
+            type: 'Employee Transfer',
+            status: 'Completed',
+            details: {
+                employeeId: employee.id,
+                employeeName: `${employee.firstName} ${employee.lastName}`,
+                oldDepartmentId,
+                newDepartmentId: req.body.departmentId,
+                oldDepartmentName: oldDepartment ? oldDepartment.name : 'None',
+                newDepartmentName: newDepartment ? newDepartment.name : 'Unknown',
+                message: `Employee transferred from ${oldDepartment ? oldDepartment.name : 'None'} to ${newDepartment ? newDepartment.name : 'Unknown'}`
+            }
+        });
+        
+        // Return response with details
         res.json({ 
             message: 'Employee transferred successfully',
+            employee: employee.toJSON(),
             from: oldDepartment ? oldDepartment.name : 'None',
             to: newDepartment ? newDepartment.name : 'Unknown',
-            oldDepartmentId: oldDepartmentId,
+            oldDepartmentId,
             newDepartmentId: req.body.departmentId,
             oldDepartmentName: oldDepartment ? oldDepartment.name : 'None',
             newDepartmentName: newDepartment ? newDepartment.name : 'Unknown',
         });
-    } catch (err) { next(err); }
+    } catch (err) {
+        console.error('Transfer error:', err);
+        next(err);
+    }
 }
 
 module.exports = router; 

@@ -17,6 +17,7 @@ export class TransferComponent implements OnInit {
   submitting = false;
   submitted = false;
   errorMessage = '';
+  currentDepartmentId?: number;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -34,34 +35,42 @@ export class TransferComponent implements OnInit {
       departmentId: ['', Validators.required]
     });
 
-    // Load departments
+    // Load departments first
+    this.loading = true;
     this.departmentService.getAll()
       .pipe(first())
-      .subscribe(
-        departments => {
+      .subscribe({
+        next: departments => {
           this.departments = departments;
+          // After loading departments, load the employee
+          this.loadEmployee();
         },
-        error => {
+        error: error => {
           console.error('Error loading departments:', error);
+          this.loading = false;
+          this.errorMessage = 'Failed to load departments: ' + error;
         }
-      );
+      });
+  }
 
-    // Load employee details
-    this.loading = true;
+  loadEmployee() {
     this.employeeService.getById(this.id)
       .pipe(first())
-      .subscribe(
-        employee => {
+      .subscribe({
+        next: employee => {
           this.employee = employee;
+          this.currentDepartmentId = employee.departmentId;
           this.form.get('departmentId')?.setValue(employee.departmentId);
           this.loading = false;
         },
-        error => {
+        error: error => {
           console.error('Error loading employee:', error);
           this.loading = false;
-          this.router.navigate(['/employees']);
+          this.errorMessage = 'Failed to load employee: ' + error;
+          // Don't navigate away immediately, show the error
+          setTimeout(() => this.router.navigate(['/employees']), 3000);
         }
-      );
+      });
   }
 
   // convenience getter for easy access to form fields
@@ -79,16 +88,24 @@ export class TransferComponent implements OnInit {
       return;
     }
 
+    // Don't do anything if department hasn't changed
+    if (this.currentDepartmentId?.toString() === this.form.value.departmentId) {
+      this.alertService.info('Employee is already in this department');
+      return;
+    }
+
     this.submitting = true;
     this.employeeService.transfer(this.id, this.form.value.departmentId)
       .pipe(first())
       .subscribe({
-        next: () => {
+        next: (response) => {
+          console.log('Transfer response:', response);
           this.alertService.success('Employee transferred successfully', { keepAfterRouteChange: true });
           this.router.navigate(['/employees']);
         },
         error: error => {
-          this.errorMessage = error;
+          console.error('Transfer error:', error);
+          this.errorMessage = typeof error === 'string' ? error : 'Failed to transfer employee';
           this.submitting = false;
         }
       });
