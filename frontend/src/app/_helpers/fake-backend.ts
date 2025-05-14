@@ -170,7 +170,18 @@ export class FakeBackendInterceptor implements HttpInterceptor {
         function getEmployees() {
             if (!isAuthorized()) return unauthorized();
             
-            return ok(employees);
+            // Add user information to each employee
+            const employeesWithUsers = employees.map(employee => {
+                const user = accounts.find(a => a.id === employee.userId);
+                const department = departments.find(d => d.id === employee.departmentId);
+                return {
+                    ...employee,
+                    user: user ? basicDetails(user) : null,
+                    department: department || null
+                };
+            });
+            
+            return ok(employeesWithUsers);
         }
         
         function getEmployeeById() {
