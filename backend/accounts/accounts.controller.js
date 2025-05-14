@@ -32,7 +32,30 @@ module.exports = router;
 
 // Public test endpoint for API connectivity check
 function publicTest(req, res, next) {
-    res.json({ message: 'API is working properly', timestamp: new Date().toISOString() });
+    // Get origin for debugging
+    const origin = req.get('origin') || 'Unknown origin';
+    const fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
+    
+    res.json({ 
+        status: 'success',
+        message: 'API is working properly',
+        timestamp: new Date().toISOString(),
+        server: 'User Management API',
+        request: {
+            origin: origin,
+            url: fullUrl,
+            headers: {
+                'user-agent': req.get('user-agent'),
+                'content-type': req.get('content-type'),
+                'accept': req.get('accept')
+            }
+        },
+        env: process.env.NODE_ENV || 'development',
+        cors: {
+            enabled: true,
+            origins: ['vercel.app', 'render.com', 'localhost']
+        }
+    });
 }
 
 // Another public test endpoint for UI connectivity testing

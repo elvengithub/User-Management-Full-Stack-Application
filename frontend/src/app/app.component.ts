@@ -45,9 +45,37 @@ export class AppComponent implements OnInit {
       console.log(`Environment: ${environment.detectedEnvironment}`);
       console.log(`API Endpoint: ${environment.apiUrl}`);
     }
+
+    document.body.className = this.account ? 'bg-light' : 'bg-dark';
+    
+    // Test backend connectivity on startup
+    this.testBackendConnection();
   }
 
   logout() {
     this.accountService.logout();
+    document.body.className = 'bg-dark';
+  }
+
+  private testBackendConnection() {
+    console.log('Testing connection to backend:', environment.apiUrl);
+    
+    this.accountService.testConnection().subscribe({
+      next: (result) => {
+        console.log('✅ Backend connection successful:', result);
+        // Test connection to accounts API specifically
+        this.accountService.getConnectionInfo().subscribe({
+          next: (info) => {
+            console.log('✅ Account API connection successful:', info);
+          },
+          error: (err) => {
+            console.error('❌ Account API connection failed:', err.message);
+          }
+        });
+      },
+      error: (error) => {
+        console.error('❌ Backend connection failed:', error.message);
+      }
+    });
   }
 }

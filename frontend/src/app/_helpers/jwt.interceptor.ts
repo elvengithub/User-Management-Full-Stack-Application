@@ -18,11 +18,9 @@ export class JwtInterceptor implements HttpInterceptor {
     const account = this.accountService.accountValue;
     const isLoggedIn = account?.jwtToken;
     
-    // Check if request is to any of our API endpoints
+    // Check if request is to any of our API endpoints - ensure Render endpoint is prioritized
     const isApiUrl = request.url.includes(environment.apiUrl) || 
-                    request.url.includes('user-management-system-angular.onrender.com') ||
-                    request.url.includes('user-management-system-angular-tm8z.vercel.app') ||
-                    request.url.includes('localhost:4000');
+                    request.url.includes('user-management-full-stack-application.onrender.com');
                     
     const isRefreshTokenRequest = request.url.includes('/refresh-token');
     const isRevokeTokenRequest = request.url.includes('/revoke-token');
@@ -147,7 +145,6 @@ export class JwtInterceptor implements HttpInterceptor {
 
   private addTokenHeader(request: HttpRequest<any>, token: string) {
     console.log(`Adding refreshed token to request: ${request.method} ${request.url}`);
-    console.log(`New JWT token: ${token.substring(0, 20)}...`);
     
     return request.clone({
       setHeaders: {

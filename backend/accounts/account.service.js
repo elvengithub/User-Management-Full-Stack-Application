@@ -322,7 +322,9 @@ function basicDetails(account) {
 }
 
 async function sendVerificationEmail(account, origin) {
-    const verifyUrl = `${origin || 'http://localhost:4200'}/account/verify-email?token=${account.verificationToken}`;
+    // Always use proper production URL if no origin provided
+    const productionUrl = 'https://user-management-full-stack-application-zeta.vercel.app';
+    const verifyUrl = `${origin || productionUrl}/account/verify-email?token=${account.verificationToken}`;
     
     const emailTemplate = `
 <!DOCTYPE html>
@@ -417,7 +419,9 @@ async function sendVerificationEmail(account, origin) {
 }
 
 async function sendAlreadyRegisteredEmail(email, origin) {
-    const resetUrl = `${origin || 'http://localhost:4200'}/account/forgot-password`;
+    // Always use proper production URL if no origin provided
+    const productionUrl = 'https://user-management-full-stack-application-zeta.vercel.app';
+    const resetUrl = `${origin || productionUrl}/account/forgot-password`;
     
     const emailTemplate = `
 <!DOCTYPE html>
@@ -518,7 +522,9 @@ async function sendAlreadyRegisteredEmail(email, origin) {
 }
 
 async function sendPasswordResetEmail(account, origin) {
-    const resetUrl = `${origin || 'http://localhost:4200'}/account/reset-password?token=${account.resetToken}`;
+    // Always use proper production URL if no origin provided
+    const productionUrl = 'https://user-management-full-stack-application-zeta.vercel.app';
+    const resetUrl = `${origin || productionUrl}/account/reset-password?token=${account.resetToken}`;
     
     const emailTemplate = `
 <!DOCTYPE html>

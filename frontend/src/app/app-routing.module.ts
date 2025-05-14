@@ -18,10 +18,10 @@ const routes: Routes = [
     { path: 'account', loadChildren: accountModule },
     { path: 'admin', loadChildren: adminModule, canActivate: [AuthGuard], data: { roles: [Role.Admin] } },
     { path: 'profile', loadChildren: profileModule, canActivate: [AuthGuard] },
-    { path: 'employees', loadChildren: employeesModule, canActivate: [AuthGuard] },
-    { path: 'departments', loadChildren: departmentsModule, canActivate: [AuthGuard] },
-    { path: 'requests', loadChildren: requestsModule, canActivate: [AuthGuard] },
-    { path: 'workflows', loadChildren: workflowsModule, canActivate: [AuthGuard] },
+    { path: 'employees', loadChildren: employeesModule, canActivate: [AuthGuard], data: { roles: [Role.Admin] } },
+    { path: 'departments', loadChildren: departmentsModule, canActivate: [AuthGuard], data: { roles: [Role.Admin] } },
+    { path: 'requests', loadChildren: requestsModule, canActivate: [AuthGuard], data: { roles: [Role.Admin] } },
+    { path: 'workflows', loadChildren: workflowsModule, canActivate: [AuthGuard], data: { roles: [Role.Admin] } },
     
     // otherwise redirect to home
     { path: '**', redirectTo: '' }

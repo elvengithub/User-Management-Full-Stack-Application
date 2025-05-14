@@ -94,8 +94,8 @@ export class AccountService {
         console.error('Login failed:', error);
         
         // Handle CORS errors specially
-        if (error.message && error.message.includes('Http failure response for')) {
-          return throwError(() => new Error('Cannot connect to authentication server. Please try again later.'));
+        if (error.message && (error.message.includes('Http failure response for') || error.status === 0)) {
+          return throwError(() => new Error('Cannot connect to authentication server. Check your network connection and try again.'));
         }
         
         // Transform the error to a more user-friendly message
@@ -210,11 +210,14 @@ export class AccountService {
     let body = {};
     if (fallbackToken && fallbackToken !== 'null' && fallbackToken !== 'undefined') {
       console.log('Using fallback token from localStorage');
-      body = { refreshToken: fallbackToken };
+      body = { token: fallbackToken };
     } else {
       console.log('No fallback token available in localStorage');
     }
     
+    console.log(`Sending refresh token request to: ${baseUrl}/refresh-token`);
+    console.log('Request body:', body);
+
     return this.http.post<any>(
       `${baseUrl}/refresh-token`, 
       body, 
@@ -252,11 +255,20 @@ export class AccountService {
         return updatedAccount;
       }),
       catchError(error => {
-        console.error('Token refresh failed:', error);
+        console.error('Refresh token failed:', error);
         
-        // Only cleanup and redirect if it's a true authentication error
-        if (error.status === 401 || error.status === 403) {
-          this.cleanupAndRedirect();
+        // If we get unauthorized or forbidden, clear the user state
+        if (error.status === 401 || error.status === 403 || error.status === 0) {
+          // Clear user state and redirect to login
+          this.stopRefreshTokenTimer();
+          this.accountSubject.next(null);
+          localStorage.removeItem('account');
+          localStorage.removeItem('refreshToken');
+          
+          // Add a small delay before redirecting to allow error messages to be shown
+          setTimeout(() => {
+            this.router.navigate(['/account/login']);
+          }, 100);
         }
         
         return throwError(() => new Error('Session expired. Please login again.'));

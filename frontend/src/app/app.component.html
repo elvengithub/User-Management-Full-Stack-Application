@@ -4,12 +4,14 @@
       <div class="navbar-nav">
         <!-- Common links for all users -->
         <a class="nav-item nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
-        <a class="nav-item nav-link" routerLink="/employees" routerLinkActive="active">Employees</a>
-        <a class="nav-item nav-link" routerLink="/departments" routerLinkActive="active">Departments</a>
-        <a class="nav-item nav-link" routerLink="/requests" routerLinkActive="active">Requests</a>
         
         <!-- Admin-only links -->
-        <a class="nav-item nav-link" routerLink="/admin" routerLinkActive="active" *ngIf="account?.role === 'Admin'">Admin</a>
+        <ng-container *ngIf="account?.role === Role.Admin">
+          <a class="nav-item nav-link" routerLink="/employees" routerLinkActive="active">Employees</a>
+          <a class="nav-item nav-link" routerLink="/departments" routerLinkActive="active">Departments</a>
+          <a class="nav-item nav-link" routerLink="/requests" routerLinkActive="active">Requests</a>
+          <a class="nav-item nav-link" routerLink="/admin" routerLinkActive="active">Admin</a>
+        </ng-container>
         
         <!-- Account management -->
         <a class="nav-item nav-link" routerLink="/profile" routerLinkActive="active">Profile</a>
@@ -18,7 +20,7 @@
       <!-- Environment indicator visible only during development -->
       <div class="ms-auto" *ngIf="!isProduction">
         <span class="badge bg-info text-white">{{detectedEnv}} API</span>
-        <span class="badge ms-2" [ngClass]="{'bg-danger': account?.role !== 'Admin', 'bg-success': account?.role === 'Admin'}">
+        <span class="badge ms-2" [ngClass]="{'bg-danger': account?.role !== Role.Admin, 'bg-success': account?.role === Role.Admin}">
           Role: {{account?.role}}
         </span>
       </div>

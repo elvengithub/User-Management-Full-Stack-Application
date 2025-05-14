@@ -15,10 +15,10 @@ const DEFAULT_REMOTE_API = RENDER_API; // Default for other hosting platforms
 // This will automatically choose the correct API endpoint based on where the frontend is running
 export const environment = {
     production: false,
-    // Use fake backend instead of real API
-    useFakeBackend: true,
-    // Only use real API URL when not using fake backend
-    apiUrl: 'http://localhost:4000', // This URL won't be used when fake backend is enabled
+    // Disable fake backend to use real API
+    useFakeBackend: false,
+    // Use Render API for development
+    apiUrl: RENDER_API,
     wsUrl: isLocalhost ? 'ws://localhost:4000' : 'wss://user-management-full-stack-application.onrender.com',
     // For debugging - shows which environment was detected
     detectedEnvironment: isLocalhost 
