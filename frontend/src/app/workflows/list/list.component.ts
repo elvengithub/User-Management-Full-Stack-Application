@@ -3,7 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { FormControl } from '@angular/forms';
 import { first } from 'rxjs/operators';
 
-import { WorkflowService, AccountService } from '../../_services';
+import { WorkflowService, AccountService, RequestService } from '../../_services';
 
 @Component({
   templateUrl: './list.component.html',
@@ -65,6 +65,7 @@ export class ListComponent implements OnInit {
 
   constructor(
     private workflowService: WorkflowService,
+    private requestService: RequestService,
     public accountService: AccountService,
     private router: Router,
     private route: ActivatedRoute
@@ -137,6 +138,7 @@ export class ListComponent implements OnInit {
     
     console.log(`Updating workflow ID: ${workflow.id} from ${workflow.status} to ${status}`);
     
+    // Update the workflow status
     this.workflowService.updateStatus(workflow.id, status)
       .pipe(first())
       .subscribe({
@@ -148,6 +150,34 @@ export class ListComponent implements OnInit {
           if (status === 'Approved' && 
               (workflow.type === 'Employee Transfer' || workflow.type === 'Transfer' || workflow.type === 'Department Transfer')) {
             alert('Transfer approved and applied successfully!');
+          }
+          
+          // For Request workflows, also update the corresponding request status
+          if ((workflow.type === 'Request Created' || workflow.type === 'Request Status Update') && 
+              status === 'Approved' && 
+              workflow.details?.requestId) {
+              
+            console.log(`Updating related request ${workflow.details.requestId} to status ${status}`);
+            
+            // Update the request status to match the workflow status
+            this.requestService.updateStatus(workflow.details.requestId, status)
+              .pipe(first())
+              .subscribe({
+                next: (updatedRequest) => {
+                  console.log('Request updated successfully:', updatedRequest);
+                  // Also update the workflow details to reflect the new request status
+                  if (workflow.details) {
+                    workflow.details.requestStatus = status;
+                  }
+                  
+                  // Show success alert for request approval
+                  alert(`Request ${workflow.details.requestType || ''} has been approved successfully!`);
+                },
+                error: (error) => {
+                  console.error(`Error updating related request ${workflow.details.requestId}:`, error);
+                  alert(`The workflow was updated, but there was an error updating the request: ${error.message || 'Unknown error'}`);
+                }
+              });
           }
         },
         error: (error) => {

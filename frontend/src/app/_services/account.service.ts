@@ -390,36 +390,57 @@ export class AccountService {
   // helper methods
 
   public testConnection(): Observable<any> {
-    // Use the public test endpoint that doesn't require authentication
-    return this.http.get<any>(`${baseUrl}/public-test`, { withCredentials: true })
-      .pipe(
-        tap(_ => console.log('API connection test successful')),
-        catchError(error => {
-          console.error('API connection test failed:', error);
-          return throwError(() => new Error(`API returned ${error.status}: ${error.message}`));
-        })
-      );
+    // When using fake backend, return successful connection immediately
+    if (environment.useFakeBackend) {
+      return of({
+        status: 'success',
+        message: 'Using fake backend (no API connection needed)',
+        timestamp: new Date().toISOString(),
+        environment: environment.detectedEnvironment
+      });
+    }
+
+    // Try to connect to the public test endpoint
+    return this.http.get(`${environment.apiUrl}/public-test`).pipe(
+      catchError(error => {
+        console.error('API connection test failed:', error);
+        return throwError(() => ({
+          status: 'error',
+          message: 'Failed to connect to API',
+          error: error
+        }));
+      })
+    );
   }
 
   // Verify authentication status - useful for page refresh
   verifyAuth() {
-    // If we have an account stored, try to refresh the token
-    if (this.accountValue && this.accountValue.jwtToken) {
-      console.log('Verifying authentication status on page load/refresh');
-      this.refreshToken().subscribe({
-        next: () => {
-          console.log('Authentication verified successfully');
-          // No need to do anything else here, the token is refreshed
-        },
-        error: (error) => {
-          console.error('Authentication verification failed:', error);
-          // Only clean up if truly invalid, not for network errors
-          if (error.status === 401 || error.status === 403) {
-            this.cleanupAndRedirect();
-          }
+    // Don't verify if no account exists
+    if (!this.accountValue) {
+      return;
+    }
+
+    // Skip verification when using fake backend
+    if (environment.useFakeBackend) {
+      console.log('Using fake backend, skipping auth verification');
+      return;
+    }
+
+    // Use the getById endpoint to verify our JWT works
+    this.getById(this.accountValue.id.toString())
+      .pipe(
+        catchError(error => {
+          console.error('Auth verification failed:', error);
+          // If verification fails, log out the user
+          this.cleanupAndRedirect();
+          return throwError(() => error);
+        })
+      )
+      .subscribe({
+        next: (account) => {
+          console.log('Auth verification successful');
         }
       });
-    }
   }
 
   // Add this method after the testConnection method
