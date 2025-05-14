@@ -97,6 +97,8 @@ The application includes a fake backend interceptor for testing without a real A
 
 Run `ng build` to build the project. The build artifacts will be stored in the `dist/` directory.
 
+`ng serve` for running the application
+
 ## Testing
 
 Run `ng test` to execute the unit tests via Karma.
