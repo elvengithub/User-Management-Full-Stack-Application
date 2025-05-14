@@ -15,7 +15,9 @@ const port = isProduction ? (process.env.PORT || 80) : 4000;
 const allowedOrigins = [
     'http://localhost:4200',
     'http://localhost:3000',
-    'http://127.0.0.1:4200'
+    'http://127.0.0.1:4200',
+    'https://user-management-full-stack-application.onrender.com',
+    'https://user-management-full-stack-application-frontend.onrender.com'
 ];
 
 // Parse JSON and URL-encoded data
@@ -36,7 +38,7 @@ app.use(cors({
         if (!origin) return callback(null, true);
         
         // Check if the origin is allowed
-        if (allowedOrigins.includes(origin)) {
+        if (allowedOrigins.includes(origin) || origin.endsWith('.onrender.com')) {
             callback(null, true);
         } else {
             console.log(`CORS blocked request from: ${origin}`);
@@ -53,7 +55,7 @@ app.use((req, res, next) => {
     res.header('Access-Control-Allow-Credentials', 'true');
     
     const origin = req.headers.origin;
-    if (allowedOrigins.includes(origin)) {
+    if (allowedOrigins.includes(origin) || (origin && origin.endsWith('.onrender.com'))) {
         res.header('Access-Control-Allow-Origin', origin);
     }
     

@@ -8,6 +8,7 @@ const accountService = require('./account.service');
 const db = require('../_helpers/db');
 
 // routes
+router.get('/public-test', publicTest); // Public endpoint for testing API connectivity
 router.post('/authenticate', authenticateSchema, authenticate);
 router.post('/refresh-token', refreshToken);
 router.post('/revoke-token', authorize(), revokeTokenSchema, revokeToken);
@@ -27,6 +28,11 @@ router.post('/debug/clear-tokens', authorize(), clearInactiveTokens);
 router.post('/set-offline', authorize(), setOffline);
 
 module.exports = router;
+
+// Public test endpoint for API connectivity check
+function publicTest(req, res, next) {
+    res.json({ message: 'API is working properly', timestamp: new Date().toISOString() });
+}
 
 function authenticateSchema(req, res, next) {
     const schema = Joi.object({
