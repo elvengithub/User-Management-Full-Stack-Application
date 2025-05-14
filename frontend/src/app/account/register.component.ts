@@ -50,6 +50,14 @@ export class RegisterComponent implements OnInit {
         this.testingConnection = true;
         this.apiInfo.message = 'Checking API connection...';
 
+        // If using fake backend, skip real API connection test
+        if (environment.useFakeBackend) {
+            this.apiInfo.isConnected = true;
+            this.apiInfo.message = 'Using fake backend (no API connection needed)';
+            this.testingConnection = false;
+            return;
+        }
+
         // Call the public test endpoint we just created
         fetch(`${environment.apiUrl}/public-test`, {
             method: 'GET',

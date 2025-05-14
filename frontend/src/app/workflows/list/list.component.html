@@ -193,12 +193,20 @@
               }">{{workflow.status}}</span>
             </td>
             <td *ngIf="isAdmin">
-              <select class="form-select d-inline-block w-auto" [(ngModel)]="workflow.status" (change)="updateStatus(workflow, $event)">
+              <!-- Only show dropdown for Pending workflows -->
+              <select *ngIf="workflow.status === 'Pending'" 
+                  class="form-select d-inline-block w-auto" 
+                  [(ngModel)]="workflow.status" 
+                  (change)="updateStatus(workflow, $event)">
                 <option>Pending</option>
                 <option>Approved</option>
                 <option>Rejected</option>
-                <option>Completed</option>
               </select>
+              
+              <!-- Show a "locked" message for non-pending workflows -->
+              <span *ngIf="workflow.status !== 'Pending'" class="text-muted small">
+                <i class="fas fa-lock"></i> {{workflow.status}}
+              </span>
             </td>
           </tr>
           <tr *ngIf="!workflows.length">

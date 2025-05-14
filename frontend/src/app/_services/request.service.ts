@@ -30,6 +30,7 @@ export class RequestService {
     }
 
     updateStatus(id: string, status: string): Observable<any> {
+        console.log(`Updating request ${id} status to ${status}`);
         return this.http.put<any>(`${this.baseUrl}/${id}/status`, { status });
     }
 

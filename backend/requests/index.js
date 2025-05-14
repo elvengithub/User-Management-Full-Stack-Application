@@ -9,6 +9,7 @@ router.get('/', authorize(Role.Admin), getAll);
 router.get('/:id', authorize(), getById);
 router.get('/employee/:employeeId', authorize(), getByEmployeeId);
 router.put('/:id', authorize(Role.Admin), update);
+router.put('/:id/status', authorize(Role.Admin), updateStatus);
 router.delete('/:id', authorize(Role.Admin), _delete);
 
 async function create(req, res, next) {
@@ -282,6 +283,70 @@ async function update(req, res, next) {
         res.json(fullRequest);
     } catch (err) { 
         console.error('Error updating request:', err);
+        next(err); 
+    }
+}
+
+async function updateStatus(req, res, next) {
+    try {
+        const request = await db.Request.findByPk(req.params.id);
+        if (!request) throw new Error('Request not found');
+        
+        console.log(`Updating request status ID: ${req.params.id} to ${req.body.status}`);
+        
+        // Store old status for comparison
+        const oldStatus = request.status;
+        const newStatus = req.body.status;
+        
+        // Update request status only
+        await request.update({
+            status: newStatus
+        });
+        
+        console.log(`Request status changed from '${oldStatus}' to '${newStatus}'`);
+        
+        // Get current items
+        const existingItems = await db.RequestItem.findAll({ 
+            where: { requestId: request.id } 
+        });
+        const items = existingItems.map(item => item.toJSON());
+        
+        // Format items for workflow
+        const itemsList = items.map(item => `${item.name} (x${item.quantity})`);
+        
+        // Create workflow entry for the status change
+        const workflowDetails = {
+            requestId: request.id,
+            requestType: request.type || 'General Request',
+            oldStatus: oldStatus,
+            newStatus: newStatus,
+            updatedBy: req.user.role,
+            itemCount: items.length,
+            requestItems: items,
+            items: itemsList,
+            requestStatus: newStatus,
+            description: request.description || '',
+            message: `Request #${request.id} status changed from ${oldStatus} to ${newStatus}`
+        };
+        
+        console.log('Status update workflow details:', JSON.stringify(workflowDetails));
+        
+        await db.Workflow.create({
+            employeeId: request.employeeId,
+            type: 'Request Status Update',
+            status: 'Completed', 
+            details: workflowDetails
+        });
+        
+        // Return the updated request with items
+        const fullRequest = {
+            ...request.toJSON(),
+            items: items
+        };
+        
+        res.json(fullRequest);
+    } catch (err) { 
+        console.error('Error updating request status:', err);
         next(err); 
     }
 }
