@@ -14,13 +14,72 @@
         <tbody>
           <tr *ngFor="let workflow of workflows">
             <td>{{workflow.type}}</td>
-            <td>{{workflow.details | json}}</td>
-            <td>{{workflow.status}}</td>
+            <td>
+              <!-- For Employee Transfer type -->
+              <ng-container *ngIf="workflow.type === 'Employee Transfer' || workflow.type === 'Transfer'">
+                <div class="transfer-details">
+                  <div class="row">
+                    <div class="col-5 text-center">
+                      <div class="dept-name">{{getTransferFrom(workflow.details)}}</div>
+                      <div><small>Original Department</small></div>
+                    </div>
+                    <div class="col-2 text-center">
+                      <i class="fas fa-arrow-right transfer-arrow"></i>
+                    </div>
+                    <div class="col-5 text-center">
+                      <div class="dept-name">{{getTransferTo(workflow.details)}}</div>
+                      <div><small>New Department</small></div>
+                    </div>
+                  </div>
+                  <p *ngIf="workflow.details?.effectiveDate" class="mt-2"><strong>Effective Date:</strong> {{workflow.details?.effectiveDate | date}}</p>
+                  <p *ngIf="workflow.details?.reason || workflow.details?.message"><small>{{workflow.details?.reason || workflow.details?.message}}</small></p>
+                </div>
+              </ng-container>
+              
+              <!-- For Department Transfer type -->
+              <ng-container *ngIf="workflow.type === 'Department Transfer'">
+                <div class="transfer-details">
+                  <div class="row">
+                    <div class="col-5 text-center">
+                      <div class="dept-name">{{getTransferFrom(workflow.details)}}</div>
+                      <div><small>Original Department</small></div>
+                    </div>
+                    <div class="col-2 text-center">
+                      <i class="fas fa-arrow-right transfer-arrow"></i>
+                    </div>
+                    <div class="col-5 text-center">
+                      <div class="dept-name">{{getTransferTo(workflow.details)}}</div>
+                      <div><small>New Department</small></div>
+                    </div>
+                  </div>
+                  <p *ngIf="workflow.details?.effectiveDate" class="mt-2"><strong>Effective Date:</strong> {{workflow.details?.effectiveDate | date}}</p>
+                  <p *ngIf="workflow.details?.reason || workflow.details?.message"><small>{{workflow.details?.reason || workflow.details?.message}}</small></p>
+                </div>
+              </ng-container>
+              
+              <!-- For all other workflow types -->
+              <ng-container *ngIf="workflow.type !== 'Employee Transfer' && workflow.type !== 'Transfer' && workflow.type !== 'Department Transfer'">
+                <div *ngIf="isString(workflow.details)" class="workflow-details">
+                  <p>{{workflow.details}}</p>
+                </div>
+                <div *ngIf="!isString(workflow.details)" class="workflow-details">
+                  <p>{{formatWorkflowDetails(workflow.details)}}</p>
+                </div>
+              </ng-container>
+            </td>
+            <td>
+              <span class="badge" [ngClass]="{
+                'bg-warning': workflow.status === 'Pending',
+                'bg-success': workflow.status === 'Approved' || workflow.status === 'Completed',
+                'bg-danger': workflow.status === 'Rejected'
+              }">{{workflow.status}}</span>
+            </td>
             <td *ngIf="isAdmin">
               <select class="form-select d-inline-block w-auto" [(ngModel)]="workflow.status" (change)="updateStatus(workflow, $event)">
                 <option>Pending</option>
                 <option>Approved</option>
                 <option>Rejected</option>
+                <option>Completed</option>
               </select>
             </td>
           </tr>

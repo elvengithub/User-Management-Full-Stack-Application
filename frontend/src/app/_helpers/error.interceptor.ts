@@ -22,7 +22,30 @@ export class ErrorInterceptor implements HttpInterceptor {
                     // 2. refresh token requests - JWT interceptor handles these
                     if (error.status === 401 && !isAuthRequest && !isRefreshTokenRequest) {
                         console.log('401 error for non-auth request, logging out');
-                        this.accountService.logout();
+                        // Check if logout method exists before calling it
+                        if (this.accountService && typeof this.accountService.logout === 'function') {
+                            try {
+                                this.accountService.logout();
+                            } catch (e) {
+                                console.error('Error in accountService.logout:', e);
+                                // Fallback: manually clear storage and redirect
+                                if (window.localStorage) {
+                                    localStorage.removeItem('account');
+                                    localStorage.removeItem('refreshToken');
+                                }
+                                // Redirect to login page
+                                window.location.href = '/account/login';
+                            }
+                        } else {
+                            console.error('AccountService logout method not available');
+                            // Fallback: manually clear storage and redirect
+                            if (window.localStorage) {
+                                localStorage.removeItem('account');
+                                localStorage.removeItem('refreshToken');
+                            }
+                            // Redirect to login page
+                            window.location.href = '/account/login';
+                        }
                     }
 
                     const errorMessage = error.error?.message || 'Unauthorized access';

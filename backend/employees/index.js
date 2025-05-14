@@ -202,17 +202,25 @@ async function transfer(req, res, next) {
         // Store old department info
         const oldDepartmentId = employee.departmentId;
         let oldDepartment = null;
+        let oldDepartmentName = 'None';
+        
         if (oldDepartmentId) {
             oldDepartment = await db.Department.findByPk(oldDepartmentId);
+            if (oldDepartment) {
+                oldDepartmentName = oldDepartment.name;
+            }
         }
         
         // Get new department info
         let newDepartment = null;
+        let newDepartmentName = 'Unknown';
+        
         if (req.body.departmentId) {
             newDepartment = await db.Department.findByPk(req.body.departmentId);
             if (!newDepartment) {
                 throw new Error('New department not found');
             }
+            newDepartmentName = newDepartment.name;
         } else {
             throw new Error('New department ID is required');
         }
@@ -222,7 +230,7 @@ async function transfer(req, res, next) {
             return res.json({
                 message: 'Employee is already in this department',
                 departmentId: req.body.departmentId,
-                departmentName: newDepartment ? newDepartment.name : 'Unknown'
+                departmentName: newDepartmentName
             });
         }
         
@@ -239,9 +247,13 @@ async function transfer(req, res, next) {
                 employeeName: `${employee.firstName} ${employee.lastName}`,
                 oldDepartmentId,
                 newDepartmentId: req.body.departmentId,
-                oldDepartmentName: oldDepartment ? oldDepartment.name : 'None',
-                newDepartmentName: newDepartment ? newDepartment.name : 'Unknown',
-                message: `Employee transferred from ${oldDepartment ? oldDepartment.name : 'None'} to ${newDepartment ? newDepartment.name : 'Unknown'}`
+                oldDepartmentName,
+                newDepartmentName,
+                from: oldDepartmentName,
+                to: newDepartmentName,
+                fromDepartment: oldDepartmentName, 
+                toDepartment: newDepartmentName,
+                message: `Employee transferred from ${oldDepartmentName} to ${newDepartmentName}`
             }
         });
         
@@ -249,12 +261,12 @@ async function transfer(req, res, next) {
         res.json({ 
             message: 'Employee transferred successfully',
             employee: employee.toJSON(),
-            from: oldDepartment ? oldDepartment.name : 'None',
-            to: newDepartment ? newDepartment.name : 'Unknown',
+            from: oldDepartmentName,
+            to: newDepartmentName,
             oldDepartmentId,
             newDepartmentId: req.body.departmentId,
-            oldDepartmentName: oldDepartment ? oldDepartment.name : 'None',
-            newDepartmentName: newDepartment ? newDepartment.name : 'Unknown',
+            oldDepartmentName,
+            newDepartmentName,
         });
     } catch (err) {
         console.error('Transfer error:', err);
