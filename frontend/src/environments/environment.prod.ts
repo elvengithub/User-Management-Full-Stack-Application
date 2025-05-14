@@ -17,6 +17,7 @@ export const environment = {
     production: true,
     // Always use Render API as requested
     apiUrl: RENDER_API,
+    wsUrl: 'wss://user-management-full-stack-application.onrender.com',
     // Domain for cookies - important for cross-domain cookie handling
     cookieDomain: isLocalhost 
         ? undefined 
