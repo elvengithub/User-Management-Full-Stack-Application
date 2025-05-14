@@ -1,0 +1,21 @@
+<div class="card">
+  <div class="card-header">{{id ? 'Edit' : 'Add'}} Department</div>
+  <div class="card-body">
+    <div class="alert alert-danger" *ngIf="errorMessage">{{errorMessage}}</div>
+    <div class="mb-3">
+      <label class="form-label">Name</label>
+      <input type="text" class="form-control" [formControl]="f.name" [ngClass]="{ 'is-invalid': submitted && f.name.errors }">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Description</label>
+      <input type="text" class="form-control" [formControl]="f.description" [ngClass]="{ 'is-invalid': submitted && f.description.errors }">
+    </div>
+    <div class="text-center">
+      <button class="btn btn-primary me-2" (click)="onSubmit()" [disabled]="submitting">
+        <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>
+        Save
+      </button>
+      <button class="btn btn-secondary" routerLink="/departments">Cancel</button>
+    </div>
+  </div>
+</div> 

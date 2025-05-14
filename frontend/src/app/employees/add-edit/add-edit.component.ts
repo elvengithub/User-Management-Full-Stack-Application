@@ -1,0 +1,133 @@
+import { Component, OnInit } from '@angular/core';
+import { Router, ActivatedRoute } from '@angular/router';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { first } from 'rxjs/operators';
+
+import { EmployeeService, AccountService, DepartmentService, AlertService } from '../../_services';
+
+@Component({
+  templateUrl: './add-edit.component.html'
+})
+export class AddEditComponent implements OnInit {
+  form!: FormGroup;
+  id?: string;
+  title!: string;
+  loading = false;
+  submitting = false;
+  submitted = false;
+  users: any[] = [];
+  departments: any[] = [];
+  errorMessage = '';
+
+  constructor(
+    private formBuilder: FormBuilder,
+    private route: ActivatedRoute,
+    private router: Router,
+    private employeeService: EmployeeService,
+    private accountService: AccountService,
+    private departmentService: DepartmentService,
+    private alertService: AlertService
+  ) {}
+
+  ngOnInit() {
+    this.id = this.route.snapshot.params['id'];
+    this.title = this.id ? 'Edit Employee' : 'Add Employee';
+
+    this.form = this.formBuilder.group({
+      employeeId: ['', Validators.required],
+      userId: ['', Validators.required],
+      position: ['', Validators.required],
+      departmentId: ['', Validators.required],
+      hireDate: ['', Validators.required],
+      status: ['Active', Validators.required]
+    });
+
+    // Load departments
+    this.departmentService.getAll()
+      .pipe(first())
+      .subscribe(
+        departments => {
+          this.departments = departments;
+        },
+        error => {
+          console.error('Error loading departments:', error);
+        }
+      );
+
+    // Load users for dropdown
+    this.accountService.getAll()
+      .pipe(first())
+      .subscribe(
+        users => {
+          this.users = users;
+        },
+        error => {
+          console.error('Error loading users:', error);
+        }
+      );
+
+    if (this.id) {
+      this.loading = true;
+      this.employeeService.getById(this.id)
+        .pipe(first())
+        .subscribe(
+          employee => {
+            this.form.patchValue(employee);
+            if (employee.hireDate) {
+              // Format date for input
+              const date = new Date(employee.hireDate);
+              this.form.get('hireDate')?.setValue(date.toISOString().split('T')[0]);
+            }
+            this.loading = false;
+          },
+          error => {
+            console.error('Error loading employee:', error);
+            this.loading = false;
+          }
+        );
+    }
+  }
+
+  // convenience getter for easy access to form fields
+  get f() { return this.form.controls; }
+
+  onSubmit() {
+    this.submitted = true;
+    this.errorMessage = '';
+
+    // reset alerts on submit
+    this.alertService.clear();
+
+    // stop here if form is invalid
+    if (this.form.invalid) {
+      return;
+    }
+
+    this.submitting = true;
+    this.saveEmployee()
+      .pipe(first())
+      .subscribe({
+        next: () => {
+          this.alertService.success('Employee saved successfully', { keepAfterRouteChange: true });
+          this.router.navigate(['/employees']);
+        },
+        error: error => {
+          this.errorMessage = error;
+          this.submitting = false;
+        }
+      });
+  }
+
+  private saveEmployee() {
+    const employee = this.form.value;
+    
+    // Convert date string to Date object
+    if (employee.hireDate) {
+      employee.hireDate = new Date(employee.hireDate);
+    }
+    
+    return this.id
+      ? this.employeeService.update(this.id, employee)
+      : this.employeeService.create(employee);
+  }
+} 

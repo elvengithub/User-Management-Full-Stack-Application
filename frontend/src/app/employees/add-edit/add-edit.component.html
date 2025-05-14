@@ -1,0 +1,44 @@
+<div class="card">
+  <div class="card-header">{{id ? 'Edit' : 'Add'}} Employee</div>
+  <div class="card-body">
+    <div class="alert alert-danger" *ngIf="errorMessage">{{errorMessage}}</div>
+    <div class="mb-3">
+      <label class="form-label">Employee ID</label>
+      <input type="text" class="form-control" [formControl]="f.employeeId" [ngClass]="{ 'is-invalid': submitted && f.employeeId.errors }" [disabled]="!!id">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">User</label>
+      <select class="form-select" [formControl]="f.userId" [ngClass]="{ 'is-invalid': submitted && f.userId.errors }">
+        <option *ngFor="let user of users" [value]="user.id">{{user.email}} ({{user.role}})</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Position</label>
+      <input type="text" class="form-control" [formControl]="f.position" [ngClass]="{ 'is-invalid': submitted && f.position.errors }">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Department</label>
+      <select class="form-select" [formControl]="f.departmentId" [ngClass]="{ 'is-invalid': submitted && f.departmentId.errors }">
+        <option *ngFor="let dept of departments" [value]="dept.id">{{dept.name}}</option>
+      </select>
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Hire Date</label>
+      <input type="date" class="form-control" [formControl]="f.hireDate" [ngClass]="{ 'is-invalid': submitted && f.hireDate.errors }">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Status</label>
+      <select class="form-select" [formControl]="f.status" [ngClass]="{ 'is-invalid': submitted && f.status.errors }">
+        <option>Active</option>
+        <option>Inactive</option>
+      </select>
+    </div>
+    <div class="text-center">
+      <button class="btn btn-primary me-2" (click)="onSubmit()" [disabled]="submitting">
+        <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>
+        Save
+      </button>
+      <button class="btn btn-secondary" routerLink="/employees">Cancel</button>
+    </div>
+  </div>
+</div> 
