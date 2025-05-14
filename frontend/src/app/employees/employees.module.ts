@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule } from '@angular/forms';
 
 import { EmployeesRoutingModule } from './employees-routing.module';
+import { LayoutComponent } from './layout.component';
 
 @NgModule({
   imports: [
@@ -10,6 +11,8 @@ import { EmployeesRoutingModule } from './employees-routing.module';
     ReactiveFormsModule,
     EmployeesRoutingModule
   ],
-  declarations: []
+  declarations: [
+    LayoutComponent
+  ]
 })
 export class EmployeesModule { } 

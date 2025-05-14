@@ -4,17 +4,14 @@
       <div class="navbar-nav">
         <!-- Common links for all users -->
         <a class="nav-item nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
+        <a class="nav-item nav-link" routerLink="/employees" routerLinkActive="active">Employees</a>
+        <a class="nav-item nav-link" routerLink="/departments" routerLinkActive="active">Departments</a>
+        <a class="nav-item nav-link" routerLink="/requests" routerLinkActive="active">Requests</a>
         
         <!-- Admin-only links -->
-        <ng-container *ngIf="account?.role === 'Admin'">
-          <a class="nav-item nav-link" routerLink="/employees" routerLinkActive="active">Employees</a>
-          <a class="nav-item nav-link" routerLink="/departments" routerLinkActive="active">Departments</a>
-          <a class="nav-item nav-link" routerLink="/requests" routerLinkActive="active">Requests</a>
-          <a class="nav-item nav-link" routerLink="/workflows" routerLinkActive="active">Workflows</a>
-          <a class="nav-item nav-link" routerLink="/admin" routerLinkActive="active">Admin</a>
-        </ng-container>
+        <a class="nav-item nav-link" routerLink="/admin" routerLinkActive="active" *ngIf="account?.role === 'Admin'">Admin</a>
         
-        <!-- Common links continued -->
+        <!-- Account management -->
         <a class="nav-item nav-link" routerLink="/profile" routerLinkActive="active">Profile</a>
         <button class="btn btn-link nav-item nav-link" (click)="logout()">Logout</button>
       </div>

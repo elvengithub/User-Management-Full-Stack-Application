@@ -6,8 +6,6 @@
         <thead>
           <tr>
             <th>Employee ID</th>
-            <th>User</th>
-            <th>Position</th>
             <th>Department</th>
             <th>Hire Date</th>
             <th>Status</th>
@@ -17,9 +15,8 @@
         <tbody>
           <tr *ngFor="let employee of employees">
             <td>{{employee.employeeId}}</td>
-            <td>{{employee.user?.email}}</td>
-            <td>{{employee.position}}</td>
-            <td>{{employee.department?.name}}</td>
+        
+            <td>{{employee.department?.name || 'N/A'}}</td>
             <td>{{employee.hireDate | date:'shortDate'}}</td>
             <td>
               <span class="badge" [ngClass]="{'bg-success': employee.status === 'Active', 'bg-danger': employee.status !== 'Active'}">
@@ -30,7 +27,7 @@
               <button class="btn btn-sm btn-info me-1" (click)="viewRequests(employee.id)">Requests</button>
               <button class="btn btn-sm btn-info me-1" (click)="viewWorkflows(employee.id)">Workflows</button>
               <button *ngIf="isAdmin" class="btn btn-sm btn-warning me-1" (click)="transferEmployee(employee.id)">Transfer</button>
-              <button class="btn btn-sm btn-primary me-1" (click)="editEmployee(employee.id)">Edit</button>
+              <button *ngIf="isAdmin" class="btn btn-sm btn-primary me-1" (click)="editEmployee(employee.id)">Edit</button>
               <button *ngIf="isAdmin" class="btn btn-sm btn-danger" (click)="deleteEmployee(employee.id)">Delete</button>
             </td>
           </tr>

@@ -122,6 +122,7 @@ async function revokeToken({ token, ipAddress }) {
 
 async function register(params, origin) {
     if (await db.Account.findOne({ where: { email: params.email } })) {
+        await sendAlreadyRegisteredEmail(params.email, origin);
         throw 'Email "' + params.email + '" is already registered';
     }
 
@@ -144,6 +145,7 @@ async function register(params, origin) {
         }
     } catch (err) {
         console.error("Email sending failed:", err.message);
+        throw 'Failed to send verification email';
     }
 
     return {
@@ -285,8 +287,6 @@ async function hash(password) {
 }
 
 function generateJwtToken(account) {
-    // Log JWT secret access for debugging
-    console.log(`Generating JWT token with secret from ${env} environment`);
     if (!envConfig.secret) {
         console.error('JWT secret is missing or undefined!');
         throw new Error('JWT secret configuration is missing');
@@ -322,152 +322,308 @@ function basicDetails(account) {
 }
 
 async function sendVerificationEmail(account, origin) {
-    let message;
-    // Default verification URL base
-    const baseUrl = origin || 'http://localhost:4200';
+    const verifyUrl = `${origin || 'http://localhost:4200'}/account/verify-email?token=${account.verificationToken}`;
     
-    // Check which origin to use
-    let verifyUrl;
-    if (origin) {
-        // Use provided origin
-        verifyUrl = `${origin}/account/verify-email?token=${account.verificationToken}`;
-    } else {
-        // Use localhost
-        verifyUrl = `http://localhost:4200/account/verify-email?token=${account.verificationToken}`;
-    }
-    
-    message = `
-        <div style="padding: 20px; font-family: Arial, sans-serif;">
-            <p>Hello ${account.firstName},</p>
-            <p>Thank you for registering with User-Management! To complete your registration, please verify your email address by clicking the button below:</p>
-            <p style="margin: 25px 0;">
-                <a href="${verifyUrl}" style="background-color: #4CAF50; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Verify Email Address</a>
-            </p>
-            <p>If the button above doesn't work, you can also click on the link below or copy it into your browser:</p>
-            <p><a href="${verifyUrl}">${verifyUrl}</a></p>
-            <p>This link will expire in 24 hours.</p>
-            <p>Best regards,<br>The User-Management Team</p>
-        </div>
+    const emailTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Verify Your Email Address</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #2c3e50;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+        }
+        .content {
+            padding: 30px;
+            background-color: #f9f9f9;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #777;
+            background-color: #f0f0f0;
+            border-radius: 0 0 8px 8px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Welcome to Our Platform</h1>
+    </div>
+    <div class="content">
+        <div class="logo">User Management System</div>
+        <p>Hello ${account.firstName},</p>
+        <p>Thank you for registering with us! To complete your registration, please verify your email address by clicking the button below:</p>
+        
+        <p style="text-align: center;">
+            <a href="${verifyUrl}" class="button">Verify Email Address</a>
+        </p>
+        
+        <p>If the button doesn't work, you can also copy and paste the following link into your browser:</p>
+        <p><a href="${verifyUrl}" style="word-break: break-all;">${verifyUrl}</a></p>
+        
+        <p>This verification link will expire in 24 hours.</p>
+        
+        <p>If you didn't create an account with us, please ignore this email or contact support if you have questions.</p>
+        
+        <p>Best regards,<br>The User Management Team</p>
+    </div>
+    <div class="footer">
+        <p>This is an automated message. Please do not reply to this email.</p>
+        <p>&copy; ${new Date().getFullYear()} User Management System. All rights reserved.</p>
+    </div>
+</body>
+</html>
     `;
 
     await sendEmail({
         to: account.email,
-        subject: 'User-Management - Verify Your Email Address',
-        html: `
-            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px; overflow: hidden;">
-                <div style="background-color: #2c3e50; padding: 20px; text-align: center;">
-                    <h2 style="color: #ffffff; margin: 0;">User-Management</h2>
-                </div>
-                ${message}
-                <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666666;">
-                    <p>This is an automated email, please do not reply to this message.</p>
-                    <p>&copy; ${new Date().getFullYear()} User-Management. All rights reserved.</p>
-                </div>
-            </div>
-        `
+        subject: 'Please Verify Your Email Address',
+        html: emailTemplate
     });
 }
 
 async function sendAlreadyRegisteredEmail(email, origin) {
-    let message;
-    // Determine the correct origin for the forgot password link
-    let forgotPasswordUrl;
-    if (origin) {
-        // Use provided origin
-        forgotPasswordUrl = `${origin}/account/forgot-password`;
-    } else {
-        // Use localhost
-        forgotPasswordUrl = `http://localhost:4200/account/forgot-password`;
-    }
+    const resetUrl = `${origin || 'http://localhost:4200'}/account/forgot-password`;
     
-    message = `
-        <div style="padding: 20px; font-family: Arial, sans-serif;">
-            <p>Hello there,</p>
-            <p>Someone (hopefully you) has attempted to register a new account using this email address.</p>
-            <p>However, this email address is already registered in our system.</p>
-            <p>If you've forgotten your password, you can reset it by clicking the button below:</p>
-            <p style="margin: 25px 0;">
-                <a href="${forgotPasswordUrl}" style="background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 4px; display: inline-block;">Reset Password</a>
-            </p>
-            <p>If you did not attempt to register, please ignore this email or contact support if you have concerns.</p>
-            <p>Best regards,<br>The User-Management Team</p>
-        </div>
+    const emailTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Email Already Registered</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #e74c3c;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+        }
+        .content {
+            padding: 30px;
+            background-color: #f9f9f9;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #3498db;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #777;
+            background-color: #f0f0f0;
+            border-radius: 0 0 8px 8px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Account Already Exists</h1>
+    </div>
+    <div class="content">
+        <div class="logo">User Management System</div>
+        <p>Hello,</p>
+        <p>We received a request to register a new account using this email address (${email}). However, this email is already registered in our system.</p>
+        
+        <p>If you've forgotten your password, you can reset it using the link below:</p>
+        
+        <p style="text-align: center;">
+            <a href="${resetUrl}" class="button">Reset Password</a>
+        </p>
+        
+        <p>If you didn't attempt to register, no further action is required. Your account security is not affected.</p>
+        
+        <p>For security reasons, we recommend:</p>
+        <ul>
+            <li>Using a strong, unique password</li>
+            <li>Enabling two-factor authentication if available</li>
+            <li>Regularly updating your password</li>
+        </ul>
+        
+        <p>If you need any assistance, please contact our support team.</p>
+        
+        <p>Best regards,<br>The User Management Team</p>
+    </div>
+    <div class="footer">
+        <p>This is an automated security message. Please do not reply to this email.</p>
+        <p>&copy; ${new Date().getFullYear()} User Management System. All rights reserved.</p>
+    </div>
+</body>
+</html>
     `;
 
     await sendEmail({
         to: email,
-        subject: 'User-Management - Email Already Registered',
-        html: `
-            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px; overflow: hidden;">
-                <div style="background-color: #2c3e50; padding: 20px; text-align: center;">
-                    <h2 style="color: #ffffff; margin: 0;">User-Management</h2>
-                </div>
-                ${message}
-                <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666666;">
-                    <p>This is an automated email, please do not reply to this message.</p>
-                    <p>&copy; ${new Date().getFullYear()} User-Management. All rights reserved.</p>
-                </div>
-            </div>
-        `
+        subject: 'Email Address Already Registered',
+        html: emailTemplate
     });
 }
 
 async function sendPasswordResetEmail(account, origin) {
-    let message;
-    // Check which origin to use
-    let resetUrl;
-    if (origin) {
-        // Use provided origin
-        resetUrl = `${origin}/account/reset-password?token=${account.resetToken}`;
-    } else {
-        // Use localhost
-        resetUrl = `http://localhost:4200/account/reset-password?token=${account.resetToken}`;
-    }
+    const resetUrl = `${origin || 'http://localhost:4200'}/account/reset-password?token=${account.resetToken}`;
     
-    message = `
-        <div style="padding: 20px; font-family: Arial, sans-serif;">
-            <p>Hello ${account.firstName},</p>
-            <p>You recently requested to reset your password for your User-Management account.</p>
-            <p>To secure your account, please use the secure link below to create a new password:</p>
-            <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin: 30px auto;">
-                <tr>
-                    <td align="center" style="border-radius: 4px;" bgcolor="#4285f4">
-                        <a href="${resetUrl}" target="_blank" style="border: solid 1px #4285f4; border-radius: 5px; box-sizing: border-box; cursor: pointer; display: inline-block; font-size: 14px; font-weight: bold; margin: 0; padding: 12px 25px; text-decoration: none; text-transform: capitalize; background-color: #4285f4; border-color: #4285f4; color: #ffffff;">Reset Password Securely</a>
-                    </td>
-                </tr>
-            </table>
-            <p>For security reasons, this link will expire in 24 hours.</p>
-            <p>If you didn't request this password change, you can ignore this message and your password will remain the same.</p>
-            <p>For account security, please:</p>
+    const emailTemplate = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Password Reset Request</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #3498db;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .header h1 {
+            color: #ffffff;
+            margin: 0;
+        }
+        .content {
+            padding: 30px;
+            background-color: #f9f9f9;
+        }
+        .button {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #e74c3c;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .footer {
+            text-align: center;
+            padding: 20px;
+            font-size: 12px;
+            color: #777;
+            background-color: #f0f0f0;
+            border-radius: 0 0 8px 8px;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 20px;
+        }
+        .security-tip {
+            background-color: #fff8e1;
+            padding: 15px;
+            border-left: 4px solid #ffc107;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Password Reset Request</h1>
+    </div>
+    <div class="content">
+        <div class="logo">User Management System</div>
+        <p>Hello ${account.firstName},</p>
+        <p>We received a request to reset the password for your account (${account.email}).</p>
+        
+        <p>To reset your password, click the button below:</p>
+        
+        <p style="text-align: center;">
+            <a href="${resetUrl}" class="button">Reset Password</a>
+        </p>
+        
+        <p>If you didn't request a password reset, please ignore this email or contact support if you have concerns.</p>
+        
+        <div class="security-tip">
+            <h3 style="margin-top: 0;">Security Tips:</h3>
             <ul>
                 <li>Never share your password with anyone</li>
-                <li>Create a unique password you don't use for other websites</li>
-                <li>Include a mix of letters, numbers, and symbols in your password</li>
+                <li>Make sure your password is strong and unique</li>
+                <li>Change your password regularly</li>
+                <li>Be cautious of phishing attempts</li>
             </ul>
-            <p>Best regards,<br>The User-Management Team</p>
-            <p style="font-size: 12px; color: #777777; margin-top: 30px;">
-                Note: This is an automated message sent to ${account.email} in response to a password reset request for your User-Management account.
-                If you're concerned about the authenticity of this message, please access the User-Management site directly instead of clicking any links.
-            </p>
         </div>
+        
+        <p>This password reset link will expire in 24 hours.</p>
+        
+        <p>Best regards,<br>The User Management Team</p>
+    </div>
+    <div class="footer">
+        <p>This is an automated security message. Please do not reply to this email.</p>
+        <p>&copy; ${new Date().getFullYear()} User Management System. All rights reserved.</p>
+    </div>
+</body>
+</html>
     `;
 
     await sendEmail({
         to: account.email,
-        subject: 'Security Alert: Password Reset Request for User-Management Account',
-        html: `
-            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; border: 1px solid #dddddd; border-radius: 8px; overflow: hidden;">
-                <div style="background-color: #2c3e50; padding: 20px; text-align: center;">
-                    <h2 style="color: #ffffff; margin: 0;">User-Management Security</h2>
-                </div>
-                ${message}
-                <div style="background-color: #f5f5f5; padding: 15px; text-align: center; font-size: 12px; color: #666666;">
-                    <p>This is an automated security notification from User-Management.</p>
-                    <p>Please do not reply to this message as the mailbox is not monitored.</p>
-                    <p>&copy; ${new Date().getFullYear()} User-Management. All rights reserved.</p>
-                </div>
-            </div>
-        `
+        subject: 'Password Reset Request',
+        html: emailTemplate
     });
 }
 
