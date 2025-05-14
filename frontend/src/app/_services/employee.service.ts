@@ -30,6 +30,6 @@ export class EmployeeService {
     }
 
     transfer(id: string, departmentId: string): Observable<any> {
-        return this.http.put<any>(`${this.baseUrl}/${id}/transfer`, { departmentId });
+        return this.http.post<any>(`${this.baseUrl}/${id}/transfer`, { departmentId });
     }
 } 
