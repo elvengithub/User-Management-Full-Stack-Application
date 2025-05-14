@@ -234,14 +234,11 @@ async function transfer(req, res, next) {
             });
         }
         
-        // Update employee
-        await employee.update({ departmentId: req.body.departmentId });
-        
-        // Create a workflow entry for the transfer
-        await db.Workflow.create({
+        // Create a workflow entry for the transfer - Status is PENDING until approved
+        const workflow = await db.Workflow.create({
             employeeId: employee.id,
             type: 'Employee Transfer',
-            status: 'Completed',
+            status: 'Pending', // Changed from 'Completed' to 'Pending'
             details: {
                 employeeId: employee.id,
                 employeeName: `${employee.firstName} ${employee.lastName}`,
@@ -253,20 +250,22 @@ async function transfer(req, res, next) {
                 to: newDepartmentName,
                 fromDepartment: oldDepartmentName, 
                 toDepartment: newDepartmentName,
-                message: `Employee transferred from ${oldDepartmentName} to ${newDepartmentName}`
+                message: `Request to transfer employee from ${oldDepartmentName} to ${newDepartmentName}`
             }
         });
         
-        // Return response with details
+        // Return response with details - but department hasn't changed yet
         res.json({ 
-            message: 'Employee transferred successfully',
+            message: 'Transfer request submitted for approval',
             employee: employee.toJSON(),
+            workflow: workflow.toJSON(),
             from: oldDepartmentName,
             to: newDepartmentName,
             oldDepartmentId,
             newDepartmentId: req.body.departmentId,
             oldDepartmentName,
             newDepartmentName,
+            status: 'Pending'
         });
     } catch (err) {
         console.error('Transfer error:', err);
