@@ -36,11 +36,20 @@
                     </div>
                   </div>
                   <p *ngIf="workflow.details?.effectiveDate" class="mt-2"><strong>Effective Date:</strong> {{workflow.details?.effectiveDate | date}}</p>
-                  <p *ngIf="workflow.details?.reason || workflow.details?.message"><small>{{workflow.details?.reason || workflow.details?.message}}</small></p>
+                  <p *ngIf="workflow.details?.reason || workflow.details?.message" class="mt-2 small">
+                    <i class="fas fa-info-circle"></i> {{workflow.details?.reason || workflow.details?.message}}
+                  </p>
                   
                   <!-- Show approval info for pending transfers -->
                   <div *ngIf="workflow.status === 'Pending'" class="alert alert-info mt-2 mb-0 p-2 small">
                     <i class="fas fa-info-circle"></i> This transfer is waiting for approval.
+                  </div>
+                  
+                  <!-- Show department IDs in debug mode -->
+                  <div *ngIf="isAdmin" class="mt-2 small text-muted">
+                    <small>
+                      Department IDs: {{workflow.details?.oldDepartmentId || 'None'}} → {{workflow.details?.newDepartmentId || workflow.details?.departmentId || 'None'}}
+                    </small>
                   </div>
                 </div>
               </ng-container>
@@ -66,32 +75,108 @@
                     </div>
                   </div>
                   <p *ngIf="workflow.details?.effectiveDate" class="mt-2"><strong>Effective Date:</strong> {{workflow.details?.effectiveDate | date}}</p>
-                  <p *ngIf="workflow.details?.reason || workflow.details?.message"><small>{{workflow.details?.reason || workflow.details?.message}}</small></p>
+                  <p *ngIf="workflow.details?.reason || workflow.details?.message" class="mt-2 small">
+                    <i class="fas fa-info-circle"></i> {{workflow.details?.reason || workflow.details?.message}}
+                  </p>
                   
                   <!-- Show approval info for pending transfers -->
                   <div *ngIf="workflow.status === 'Pending'" class="alert alert-info mt-2 mb-0 p-2 small">
                     <i class="fas fa-info-circle"></i> This transfer is waiting for approval.
                   </div>
+                  
+                  <!-- Show department IDs in debug mode -->
+                  <div *ngIf="isAdmin" class="mt-2 small text-muted">
+                    <small>
+                      Department IDs: {{workflow.details?.oldDepartmentId || 'None'}} → {{workflow.details?.newDepartmentId || workflow.details?.departmentId || 'None'}}
+                    </small>
+                  </div>
                 </div>
               </ng-container>
               
               <!-- For Request Created type -->
-              <ng-container *ngIf="workflow.type === 'Request Created'">
+              <ng-container *ngIf="workflow.type === 'Request Created' || workflow.type === 'Request Status Update'">
                 <div class="request-details">
-                  <p><strong>Request Type:</strong> {{workflow.details?.requestType || 'Not specified'}}</p>
-                  <p *ngIf="workflow.details?.itemCount"><strong>Items:</strong> {{workflow.details?.itemCount}} item(s)</p>
-                  <div *ngIf="workflow.details?.items && workflow.details?.items.length > 0">
-                    <p><strong>Requested Items:</strong></p>
-                    <ul>
-                      <li *ngFor="let item of workflow.details?.items">{{item}}</li>
+                  <p class="mb-2">
+                    <!-- Different titles based on workflow type -->
+                    <strong *ngIf="workflow.type === 'Request Created'">Request Type:</strong> 
+                    <strong *ngIf="workflow.type === 'Request Status Update'">Status Update for:</strong> 
+                    
+                    <span *ngIf="workflow.details?.requestType" class="badge bg-primary">
+                      {{workflow.details?.requestType}}
+                    </span>
+                    <span *ngIf="!workflow.details?.requestType" class="badge bg-secondary">
+                      General Request
+                    </span>
+                    <span *ngIf="workflow.details?.requestStatus" class="badge ms-2"
+                          [ngClass]="{
+                            'bg-warning': workflow.details?.requestStatus === 'Pending',
+                            'bg-success': workflow.details?.requestStatus === 'Approved',
+                            'bg-danger': workflow.details?.requestStatus === 'Rejected',
+                            'bg-info': workflow.details?.requestStatus === 'Completed'
+                          }">
+                      {{workflow.details?.requestStatus}}
+                    </span>
+                  </p>
+
+                  <!-- Show status change message for Request Status Update -->
+                  <div *ngIf="workflow.type === 'Request Status Update' && workflow.details?.oldStatus && workflow.details?.newStatus" 
+                       class="alert alert-info p-2 mb-2">
+                    <small>
+                      <i class="fas fa-info-circle"></i> 
+                      Status changed from 
+                      <strong>{{workflow.details?.oldStatus}}</strong> to 
+                      <strong>{{workflow.details?.newStatus}}</strong>
+                    </small>
+                  </div>
+
+                  <!-- Force display of items if present in workflow details -->
+                  <div *ngIf="workflow.details?.items && workflow.details?.items.length > 0" class="mt-3">
+                    <p class="mb-1"><strong>Requested Items ({{workflow.details?.items.length}}):</strong></p>
+                    <ul class="list-group mb-2">
+                      <li *ngFor="let item of workflow.details?.items" class="list-group-item d-flex justify-content-between align-items-center py-1">
+                        {{item}}
+                      </li>
                     </ul>
                   </div>
-                  <p *ngIf="workflow.details?.message"><small>{{workflow.details?.message}}</small></p>
+                  
+                  <!-- Display individual requestItems when items array is not available -->
+                  <div *ngIf="(!workflow.details?.items || workflow.details?.items.length === 0) && workflow.details?.requestItems && workflow.details?.requestItems.length > 0" class="mt-3">
+                    <p class="mb-1"><strong>Requested Items ({{workflow.details?.requestItems.length}}):</strong></p>
+                    <ul class="list-group mb-2">
+                      <li *ngFor="let item of workflow.details?.requestItems" class="list-group-item d-flex justify-content-between align-items-center py-1">
+                        {{item.name}} (x{{item.quantity}})
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <!-- Only show "No items" if both items and requestItems are empty -->
+                  <div *ngIf="(!workflow.details?.items || workflow.details?.items.length === 0) && 
+                             (!workflow.details?.requestItems || workflow.details?.requestItems.length === 0)" class="text-muted mt-2">
+                    <small>No items requested</small>
+                  </div>
+                  
+                  <div *ngIf="workflow.details?.description" class="alert alert-light p-2 mt-2">
+                    <small><strong>Description:</strong> {{workflow.details?.description}}</small>
+                  </div>
+                  
+                  <div *ngIf="workflow.details?.message" class="text-muted mt-2">
+                    <small><i class="fas fa-info-circle"></i> {{workflow.details?.message}}</small>
+                  </div>
+                  
+                  <!-- Debug info for admin users -->
+                  <div *ngIf="isAdmin" class="mt-2 small text-muted border-top pt-2">
+                    <small>
+                      <strong>Debug:</strong> Request ID: {{workflow.details?.requestId || 'None'}}, 
+                      Items count: {{workflow.details?.itemCount || 0}},
+                      Items array: {{workflow.details?.items?.length || 0}} items,
+                      RequestItems array: {{workflow.details?.requestItems?.length || 0}} items
+                    </small>
+                  </div>
                 </div>
               </ng-container>
               
               <!-- For all other workflow types -->
-              <ng-container *ngIf="workflow.type !== 'Employee Transfer' && workflow.type !== 'Transfer' && workflow.type !== 'Department Transfer' && workflow.type !== 'Request Created'">
+              <ng-container *ngIf="workflow.type !== 'Employee Transfer' && workflow.type !== 'Transfer' && workflow.type !== 'Department Transfer' && workflow.type !== 'Request Created' && workflow.type !== 'Request Status Update'">
                 <div *ngIf="isString(workflow.details)" class="workflow-details">
                   <p>{{workflow.details}}</p>
                 </div>

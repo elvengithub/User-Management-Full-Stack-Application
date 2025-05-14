@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { AccountService } from './account.service';
 
@@ -35,8 +35,15 @@ export class WorkflowService {
     }
 
     updateStatus(id: string, status: string): Observable<any> {
+        console.log(`Sending workflow status update for ID: ${id}, new status: ${status}`);
         return this.http.put<any>(`${this.baseUrl}/${id}/status`, { status })
-            .pipe(catchError(error => this.handleError(error)));
+            .pipe(
+                tap(response => console.log('Workflow update response:', response)),
+                catchError(error => {
+                    console.error(`Error updating workflow ${id}:`, error);
+                    return this.handleError(error);
+                })
+            );
     }
 
     private handleError(error: HttpErrorResponse) {

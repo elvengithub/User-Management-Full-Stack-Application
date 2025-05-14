@@ -2,18 +2,28 @@
     <!-- main nav -->
     <nav class="navbar navbar-expand navbar-dark bg-dark" *ngIf="account">
       <div class="navbar-nav">
+        <!-- Common links for all users -->
         <a class="nav-item nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
-        <a class="nav-item nav-link" routerLink="/employees" routerLinkActive="active">Employees</a>
-        <a class="nav-item nav-link" routerLink="/departments" routerLinkActive="active">Departments</a>
-        <a class="nav-item nav-link" routerLink="/requests" routerLinkActive="active">Requests</a>
-        <a class="nav-item nav-link" routerLink="/workflows" routerLinkActive="active">Workflows</a>
+        
+        <!-- Admin-only links -->
+        <ng-container *ngIf="account?.role === 'Admin'">
+          <a class="nav-item nav-link" routerLink="/employees" routerLinkActive="active">Employees</a>
+          <a class="nav-item nav-link" routerLink="/departments" routerLinkActive="active">Departments</a>
+          <a class="nav-item nav-link" routerLink="/requests" routerLinkActive="active">Requests</a>
+          <a class="nav-item nav-link" routerLink="/workflows" routerLinkActive="active">Workflows</a>
+          <a class="nav-item nav-link" routerLink="/admin" routerLinkActive="active">Admin</a>
+        </ng-container>
+        
+        <!-- Common links continued -->
         <a class="nav-item nav-link" routerLink="/profile" routerLinkActive="active">Profile</a>
-        <a class="nav-item nav-link" routerLink="/admin" routerLinkActive="active" *ngIf="account?.role === Role.Admin">Admin</a>
         <button class="btn btn-link nav-item nav-link" (click)="logout()">Logout</button>
       </div>
       <!-- Environment indicator visible only during development -->
       <div class="ms-auto" *ngIf="!isProduction">
         <span class="badge bg-info text-white">{{detectedEnv}} API</span>
+        <span class="badge ms-2" [ngClass]="{'bg-danger': account?.role !== 'Admin', 'bg-success': account?.role === 'Admin'}">
+          Role: {{account?.role}}
+        </span>
       </div>
     </nav>
   

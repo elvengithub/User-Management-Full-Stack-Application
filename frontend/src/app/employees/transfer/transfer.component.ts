@@ -88,19 +88,36 @@ export class TransferComponent implements OnInit {
       return;
     }
 
+    // Get the department IDs as numbers
+    const newDepartmentId = parseInt(this.form.value.departmentId);
+    const currentDepartmentIdNum = this.currentDepartmentId ? parseInt(this.currentDepartmentId.toString()) : null;
+
     // Don't do anything if department hasn't changed
-    if (this.currentDepartmentId?.toString() === this.form.value.departmentId) {
+    if (currentDepartmentIdNum === newDepartmentId) {
       this.alertService.info('Employee is already in this department');
       return;
     }
 
+    // Get the selected department name for better UI feedback
+    const selectedDepartment = this.departments.find(d => parseInt(d.id) === newDepartmentId);
+    const currentDepartment = this.departments.find(d => parseInt(d.id) === currentDepartmentIdNum);
+    
+    // Log the selected data
+    console.log('Transfer data:', {
+      employeeId: this.id,
+      currentDepartmentId: currentDepartmentIdNum,
+      newDepartmentId: newDepartmentId,
+      currentDepartmentName: currentDepartment?.name || 'Unknown',
+      newDepartmentName: selectedDepartment?.name || 'Unknown'
+    });
+
     this.submitting = true;
-    this.employeeService.transfer(this.id, this.form.value.departmentId)
+    this.employeeService.transfer(this.id, newDepartmentId.toString())
       .pipe(first())
       .subscribe({
         next: (response) => {
           console.log('Transfer response:', response);
-          this.alertService.success('Employee transferred successfully', { keepAfterRouteChange: true });
+          this.alertService.success(`Employee transfer request submitted. ${selectedDepartment?.name || 'New department'} transfer is pending approval.`, { keepAfterRouteChange: true });
           this.router.navigate(['/employees']);
         },
         error: error => {

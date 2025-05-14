@@ -3,15 +3,27 @@
  * Usage: node cleanup.js
  */
 
-// Give the database time to initialize
-setTimeout(async () => {
+const db = require('./_helpers/db');
+
+// Completely drop all tables and reset the database
+async function resetDatabase() {
+    console.log('\nStarting complete database reset...');
+    
     try {
-        const cleanup = require('./_helpers/workflow-cleanup');
-        await cleanup.cleanupAllDuplicateWorkflows();
-        console.log('Manual cleanup completed successfully');
+        // Force sync with { force: true } will drop all tables
+        console.log('Dropping all tables...');
+        await db.sequelize.sync({ force: true });
+        
+        console.log('All tables have been dropped successfully');
+        console.log('Database has been completely reset');
+        
+        // Exit the process when done
         process.exit(0);
     } catch (error) {
-        console.error('Error during manual cleanup:', error);
+        console.error('Error resetting database:', error);
         process.exit(1);
     }
-}, 2000); 
+}
+
+// Run the reset function
+resetDatabase(); 

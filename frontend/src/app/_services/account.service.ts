@@ -426,7 +426,8 @@ export class AccountService {
   public getConnectionInfo(): Observable<any> {
     console.log(`Checking connection to: ${baseUrl}`);
     
-    return this.http.get<any>(`${baseUrl}/connection-test`, { 
+    // Use the public endpoint that doesn't require authentication
+    return this.http.get<any>(`${baseUrl}/public-test`, { 
       headers: new HttpHeaders({
         'Content-Type': 'application/json'
       }),

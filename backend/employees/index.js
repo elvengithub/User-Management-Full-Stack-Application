@@ -214,44 +214,61 @@ async function transfer(req, res, next) {
         // Get new department info
         let newDepartment = null;
         let newDepartmentName = 'Unknown';
+        const newDepartmentId = parseInt(req.body.departmentId);
         
-        if (req.body.departmentId) {
-            newDepartment = await db.Department.findByPk(req.body.departmentId);
+        if (!isNaN(newDepartmentId)) {
+            newDepartment = await db.Department.findByPk(newDepartmentId);
             if (!newDepartment) {
                 throw new Error('New department not found');
             }
             newDepartmentName = newDepartment.name;
         } else {
-            throw new Error('New department ID is required');
+            throw new Error('New department ID is required and must be a valid number');
         }
         
         // Check if department has actually changed
-        if (oldDepartmentId === parseInt(req.body.departmentId)) {
+        if (oldDepartmentId === newDepartmentId) {
             return res.json({
                 message: 'Employee is already in this department',
-                departmentId: req.body.departmentId,
+                departmentId: newDepartmentId,
                 departmentName: newDepartmentName
             });
         }
         
         // Create a workflow entry for the transfer - Status is PENDING until approved
+        const workflowDetails = {
+            employeeId: employee.id,
+            employeeName: `${employee.firstName} ${employee.lastName}`,
+            // Ensure all property variations are included for maximum compatibility
+            // Store department IDs as numbers to prevent type issues
+            oldDepartmentId: parseInt(oldDepartmentId) || null,
+            newDepartmentId: newDepartmentId,
+            departmentId: newDepartmentId,
+            targetDepartmentId: newDepartmentId,
+            toDepartmentId: newDepartmentId,
+            // Include department names
+            oldDepartmentName: oldDepartmentName,
+            newDepartmentName: newDepartmentName,
+            // Alternative property names for UI compatibility 
+            from: oldDepartmentName,
+            to: newDepartmentName,
+            fromDepartment: oldDepartmentName, 
+            toDepartment: newDepartmentName,
+            fromDepartmentName: oldDepartmentName,
+            toDepartmentName: newDepartmentName,
+            sourceDepartment: oldDepartmentName,
+            targetDepartment: newDepartmentName,
+            // Message
+            message: `Request to transfer employee from ${oldDepartmentName} to ${newDepartmentName}`
+        };
+        
+        console.log('Creating workflow with details:', JSON.stringify(workflowDetails, null, 2));
+        
         const workflow = await db.Workflow.create({
             employeeId: employee.id,
             type: 'Employee Transfer',
             status: 'Pending', // Changed from 'Completed' to 'Pending'
-            details: {
-                employeeId: employee.id,
-                employeeName: `${employee.firstName} ${employee.lastName}`,
-                oldDepartmentId,
-                newDepartmentId: req.body.departmentId,
-                oldDepartmentName,
-                newDepartmentName,
-                from: oldDepartmentName,
-                to: newDepartmentName,
-                fromDepartment: oldDepartmentName, 
-                toDepartment: newDepartmentName,
-                message: `Request to transfer employee from ${oldDepartmentName} to ${newDepartmentName}`
-            }
+            details: workflowDetails
         });
         
         // Return response with details - but department hasn't changed yet
@@ -262,7 +279,7 @@ async function transfer(req, res, next) {
             from: oldDepartmentName,
             to: newDepartmentName,
             oldDepartmentId,
-            newDepartmentId: req.body.departmentId,
+            newDepartmentId: newDepartmentId,
             oldDepartmentName,
             newDepartmentName,
             status: 'Pending'

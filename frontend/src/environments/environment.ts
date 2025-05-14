@@ -15,8 +15,9 @@ const DEFAULT_REMOTE_API = RENDER_API; // Default for other hosting platforms
 // This will automatically choose the correct API endpoint based on where the frontend is running
 export const environment = {
     production: false,
-    // Always use Render API as requested
-    apiUrl: RENDER_API,
+    // Use localhost API when running locally, Render API otherwise
+    apiUrl: isLocalhost ? LOCAL_API : RENDER_API,
+    wsUrl: isLocalhost ? 'ws://localhost:4000' : 'wss://user-management-full-stack-application.onrender.com',
     // For debugging - shows which environment was detected
     detectedEnvironment: isLocalhost 
         ? 'Local' 
