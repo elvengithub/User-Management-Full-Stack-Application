@@ -14,10 +14,35 @@ import { WorkflowService, AccountService } from '../../_services';
     .workflow-details p {
       margin-bottom: 0.5rem;
     }
+    .request-details {
+      padding: 10px;
+      border-radius: 5px; 
+      background-color: #f0f7ff;
+    }
+    .request-details p {
+      margin-bottom: 0.5rem;
+    }
+    .request-details ul {
+      margin-top: 0;
+      padding-left: 20px;
+    }
     .dept-name {
       font-weight: bold;
       font-size: 1.1rem;
       color: #333;
+    }
+    .text-muted {
+      color: #6c757d !important;
+    }
+    .alert {
+      position: relative;
+      border: 1px solid transparent;
+      border-radius: 0.25rem;
+    }
+    .alert-info {
+      color: #0c5460;
+      background-color: #d1ecf1;
+      border-color: #bee5eb;
     }
     .transfer-arrow {
       font-size: 1.5rem;
