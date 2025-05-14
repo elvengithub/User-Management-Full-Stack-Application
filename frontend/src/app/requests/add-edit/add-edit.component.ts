@@ -28,7 +28,7 @@ export class AddEditComponent implements OnInit {
     public accountService: AccountService,
     private alertService: AlertService
   ) {
-    // Initialize form immediately to prevent null errors
+    // Initialize form with proper validators
     this.form = this.formBuilder.group({
       type: ['Equipment', Validators.required],
       employeeId: ['', Validators.required],
@@ -41,6 +41,11 @@ export class AddEditComponent implements OnInit {
     this.id = this.route.snapshot.params['id'];
     this.title = this.id ? 'Edit Request' : 'Add Request';
     this.isAdmin = this.accountService.accountValue?.role === 'Admin';
+
+    // Add default empty item if there are none
+    if (this.itemsArray.length === 0) {
+      this.addItem();
+    }
 
     // Load employees
     this.employeeService.getAll()
@@ -76,11 +81,19 @@ export class AddEditComponent implements OnInit {
               status: request.status
             });
             
+            // Clear existing items
+            while (this.itemsArray.length) {
+              this.itemsArray.removeAt(0);
+            }
+            
             // Load items
             if (request.requestItems && request.requestItems.length) {
               request.requestItems.forEach((item: any) => {
                 this.addItem(item.name, item.quantity);
               });
+            } else {
+              // Add at least one item
+              this.addItem();
             }
             
             this.loading = false;
@@ -90,9 +103,6 @@ export class AddEditComponent implements OnInit {
             this.loading = false;
           }
         });
-    } else {
-      // Add default empty item
-      this.addItem();
     }
   }
 
@@ -109,7 +119,13 @@ export class AddEditComponent implements OnInit {
   }
 
   removeItem(index: number) {
-    this.itemsArray.removeAt(index);
+    if (this.itemsArray.length > 1) {
+      this.itemsArray.removeAt(index);
+    } else {
+      // Don't remove the last item, just clear it
+      this.itemsArray.at(0).get('name')?.setValue('');
+      this.itemsArray.at(0).get('quantity')?.setValue(1);
+    }
   }
 
   onSubmit() {
