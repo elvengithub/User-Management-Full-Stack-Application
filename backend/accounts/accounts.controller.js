@@ -9,6 +9,7 @@ const db = require('../_helpers/db');
 
 // routes
 router.get('/public-test', publicTest); // Public endpoint for testing API connectivity
+router.get('/connection-test', connectionTest); // Another public endpoint for general connectivity testing
 router.post('/authenticate', authenticateSchema, authenticate);
 router.post('/refresh-token', refreshToken);
 router.post('/revoke-token', authorize(), revokeTokenSchema, revokeToken);
@@ -32,6 +33,16 @@ module.exports = router;
 // Public test endpoint for API connectivity check
 function publicTest(req, res, next) {
     res.json({ message: 'API is working properly', timestamp: new Date().toISOString() });
+}
+
+// Another public test endpoint for UI connectivity testing
+function connectionTest(req, res, next) {
+    res.json({ 
+        status: 'success',
+        message: 'Connection test successful',
+        timestamp: new Date().toISOString(),
+        server: 'Node.js API'
+    });
 }
 
 function authenticateSchema(req, res, next) {

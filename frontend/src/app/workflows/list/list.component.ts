@@ -82,7 +82,7 @@ export class ListComponent implements OnInit {
         .subscribe(
           workflows => {
             this.loading = false;
-            this.workflows = workflows;
+            this.processWorkflows(workflows);
           },
           error => {
             console.error('Error loading workflows:', error);
@@ -95,7 +95,7 @@ export class ListComponent implements OnInit {
         .subscribe(
           workflows => {
             this.loading = false;
-            this.workflows = workflows;
+            this.processWorkflows(workflows);
           },
           error => {
             console.error('Error loading workflows:', error);
@@ -105,19 +105,56 @@ export class ListComponent implements OnInit {
     }
   }
 
+  processWorkflows(workflows: any[]) {
+    // Process workflows to ensure data structure consistency
+    this.workflows = workflows.map(workflow => {
+      // Ensure details is an object
+      if (typeof workflow.details === 'string') {
+        try {
+          workflow.details = JSON.parse(workflow.details);
+        } catch (e) {
+          console.error('Error parsing workflow details:', e);
+        }
+      }
+
+      // Ensure details is initialized
+      workflow.details = workflow.details || {};
+      
+      // Initialize items and requestItems if not present
+      if (workflow.details) {
+        workflow.details.items = workflow.details.items || [];
+        workflow.details.requestItems = workflow.details.requestItems || [];
+      }
+
+      return workflow;
+    });
+    
+    console.log('Processed workflows:', this.workflows);
+  }
+
   updateStatus(workflow: any, event: Event) {
     const status = (event.target as HTMLSelectElement).value;
     
+    console.log(`Updating workflow ID: ${workflow.id} from ${workflow.status} to ${status}`);
+    
     this.workflowService.updateStatus(workflow.id, status)
       .pipe(first())
-      .subscribe(
-        updatedWorkflow => {
+      .subscribe({
+        next: (updatedWorkflow) => {
+          console.log('Workflow updated successfully:', updatedWorkflow);
           workflow.status = updatedWorkflow.status;
+          
+          // If this was a transfer approval, show success message
+          if (status === 'Approved' && 
+              (workflow.type === 'Employee Transfer' || workflow.type === 'Transfer' || workflow.type === 'Department Transfer')) {
+            alert('Transfer approved and applied successfully!');
+          }
         },
-        error => {
+        error: (error) => {
           console.error('Error updating workflow status:', error);
+          alert(`Failed to update status: ${error.message || 'Unknown error'}`);
         }
-      );
+      });
   }
 
   getObjectKeys(obj: any): string[] {
@@ -138,6 +175,7 @@ export class ListComponent implements OnInit {
     
     // Handle different property naming conventions
     return details.oldDepartmentName || 
+           details.fromDepartmentName ||
            details.fromDepartment || 
            details.oldDepartment ||
            details.sourceDepartment || 
@@ -150,6 +188,7 @@ export class ListComponent implements OnInit {
     
     // Handle different property naming conventions
     return details.newDepartmentName ||
+           details.toDepartmentName ||
            details.toDepartment || 
            details.newDepartment ||
            details.targetDepartment || 
@@ -169,6 +208,15 @@ export class ListComponent implements OnInit {
         } catch (e) {
           return details;
         }
+      }
+      
+      // Special case for request created workflows
+      if (details.requestType) {
+        let message = `${details.requestType || 'General Request'}`;
+        if (details.itemCount) {
+          message += ` with ${details.itemCount} item(s)`;
+        }
+        return message;
       }
       
       return this.formatWorkflowDetailsObject(details);

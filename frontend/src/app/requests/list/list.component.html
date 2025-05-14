@@ -21,10 +21,27 @@
                 <li *ngFor="let item of request.requestItems">{{item.name}} (x{{item.quantity}})</li>
               </ul>
             </td>
-            <td>{{request.status}}</td>
             <td>
-              <button *ngIf="isAdmin" class="btn btn-sm btn-primary me-1" (click)="editRequest(request.id)">Edit</button>
-              <button *ngIf="isAdmin" class="btn btn-sm btn-danger" (click)="deleteRequest(request.id)">Delete</button>
+              <span class="badge" [ngClass]="{
+                'bg-warning': request.status === 'Pending',
+                'bg-success': request.status === 'Approved' || request.status === 'Completed',
+                'bg-danger': request.status === 'Rejected'
+              }">{{request.status}}</span>
+            </td>
+            <td>
+              <!-- Only show edit/delete for non-approved requests -->
+              <button *ngIf="isAdmin && request.status !== 'Approved' && request.status !== 'Completed'" 
+                class="btn btn-sm btn-primary me-1" 
+                (click)="editRequest(request.id)">Edit</button>
+              <button *ngIf="isAdmin && request.status !== 'Approved' && request.status !== 'Completed'" 
+                class="btn btn-sm btn-danger" 
+                (click)="deleteRequest(request.id)">Delete</button>
+                
+              <!-- Show a message for approved requests -->
+              <span *ngIf="request.status === 'Approved' || request.status === 'Completed'" 
+                class="text-muted small">
+                <i class="fas fa-lock"></i> Locked
+              </span>
             </td>
           </tr>
           <tr *ngIf="!requests.length">

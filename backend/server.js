@@ -8,6 +8,8 @@ const cors = require('cors');
 const errorHandler = require('./_middleware/error_handler');
 const http = require('http');
 const db = require('./_helpers/db');
+const swaggerUi = require('swagger-ui-express');
+const swaggerOptions = require('./swagger-options');
 
 // Environment detection
 const isProduction = process.env.NODE_ENV === 'production';
@@ -173,10 +175,17 @@ try {
     process.exit(1);
 }
 
-// Swagger docs route
-app.use('/api-docs', (req, res) => {
-    res.status(503).send('API Documentation temporarily unavailable due to path-to-regexp issues');
+// Add a simple public test endpoint for connectivity testing
+app.get('/public-test', (req, res) => {
+    res.json({
+        status: 'success',
+        message: 'API is working properly',
+        timestamp: new Date().toISOString()
+    });
 });
+
+// Swagger docs route
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(null, swaggerOptions));
 
 // Global error handler
 app.use(errorHandler);

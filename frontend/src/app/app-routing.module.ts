@@ -16,12 +16,12 @@ const workflowsModule = () => import('./workflows/workflows.module').then(x => x
 const routes: Routes = [
     { path: '', component: HomeComponent, canActivate: [AuthGuard] },
     { path: 'account', loadChildren: accountModule },
-    { path: 'admin', loadChildren: adminModule, canActivate: [AuthGuard], data: { roles: [Role.Admin] } },
+    { path: 'admin', loadChildren: adminModule, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
     { path: 'profile', loadChildren: profileModule, canActivate: [AuthGuard] },
-    { path: 'employees', loadChildren: employeesModule, canActivate: [AuthGuard] },
-    { path: 'departments', loadChildren: departmentsModule, canActivate: [AuthGuard] },
-    { path: 'requests', loadChildren: requestsModule, canActivate: [AuthGuard] },
-    { path: 'workflows', loadChildren: workflowsModule, canActivate: [AuthGuard] },
+    { path: 'employees', loadChildren: employeesModule, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
+    { path: 'departments', loadChildren: departmentsModule, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
+    { path: 'requests', loadChildren: requestsModule, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
+    { path: 'workflows', loadChildren: workflowsModule, canActivate: [AuthGuard], data: { roles: ['Admin'] } },
     
     // otherwise redirect to home
     { path: '**', redirectTo: '' }

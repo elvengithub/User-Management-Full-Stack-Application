@@ -19,14 +19,14 @@
       }
     },
     "secret": "STARTTLS_DEV_SECRET",
-    "emailFrom": "info@example.com",
+    "emailFrom": "elvendiaz05@gmail.com",
     "smtpOptions": {
-      "host": "smtp.example.com",
-      "port": 465,
-      "secure": true,
+      "host": "smtp.gmail.com",
+      "port": 587,
+      "secure": false,
       "auth": {
-        "user": null,
-        "pass": null
+        "user": "elvendiaz05@gmail.com",
+        "pass": "efff ijhn wpbs arag"
       },
       "tls": {
         "rejectUnauthorized": false
@@ -57,14 +57,14 @@
       }
     },
     "secret": "STARTTLS",
-    "emailFrom": "info@example.com",
+    "emailFrom": "elvendiaz05@gmail.com",
     "smtpOptions": {
-      "host": "smtp.example.com",
-      "port": 465,
-      "secure": true,
+      "host": "smtp.gmail.com",
+      "port": 587,
+      "secure": false,
       "auth": {
-        "user": null,
-        "pass": null
+         "user": "elvendiaz05@gmail.com",
+        "pass": "efff ijhn wpbs arag"
       },
       "tls": {
         "rejectUnauthorized": false

@@ -22,21 +22,27 @@ export class HomeComponent implements OnInit {
             this.account = x;
         });
         
-        // For development purposes, automatically test connection on home page load
-        if (!environment.production) {
+        // Only test connection automatically for admin users
+        if (!environment.production && this.account?.role === 'Admin') {
             this.testConnection();
         }
     }
     
     testConnection() {
         this.connectionTesting = true;
-        this.accountService.getConnectionInfo()
+        // Use public-test endpoint that doesn't require authentication
+        this.accountService.testConnection()
             .pipe(first())
             .subscribe({
                 next: (info) => {
-                    this.connectionInfo = info;
+                    this.connectionInfo = {
+                        status: 'success',
+                        endpoint: this.apiEndpoint,
+                        environment: this.apiEnvironment,
+                        response: info
+                    };
                     this.connectionTesting = false;
-                    console.log('Connection info:', info);
+                    console.log('Connection info:', this.connectionInfo);
                 },
                 error: (error) => {
                     console.error('Connection test error:', error);
