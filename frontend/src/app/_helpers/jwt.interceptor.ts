@@ -97,7 +97,32 @@ export class JwtInterceptor implements HttpInterceptor {
         catchError((err) => {
           console.error('Token refresh failed, logging out user:', err);
           this.isRefreshing = false;
-          this.accountService.logout();
+          
+          // Check if logout method exists before calling it
+          if (this.accountService && typeof this.accountService.logout === 'function') {
+            try {
+              this.accountService.logout();
+            } catch (e) {
+              console.error('Error in accountService.logout:', e);
+              // Fallback: manually clear storage and redirect
+              if (window.localStorage) {
+                localStorage.removeItem('account');
+                localStorage.removeItem('refreshToken');
+              }
+              // Redirect to login page
+              window.location.href = '/account/login';
+            }
+          } else {
+            console.error('AccountService logout method not available');
+            // Fallback: manually clear storage and redirect
+            if (window.localStorage) {
+              localStorage.removeItem('account');
+              localStorage.removeItem('refreshToken');
+            }
+            // Redirect to login page
+            window.location.href = '/account/login';
+          }
+          
           return throwError(() => new Error('Session expired. Please login again.'));
         }),
         finalize(() => {
