@@ -1,11 +1,12 @@
-<h1>Workflows</h1>
+<h1 class="text-light">Workflows</h1>
 <div class="card">
+    <div class="card-header bg-dark text-white">Workflow Events</div>
     <div class="card-body">
-        <div *ngIf="loading" class="spinner-border spinner-border-sm"></div>
+        <div *ngIf="loading" class="spinner-border spinner-border-sm text-primary"></div>
         <div *ngIf="!loading && workflows.length === 0" class="text-center">
             <p>No workflow events found</p>
         </div>
-        <table *ngIf="!loading && workflows.length > 0" class="table table-striped">
+        <table *ngIf="!loading && workflows.length > 0" class="table table-dark table-striped">
             <thead>
                 <tr>
                     <th>Employee</th>

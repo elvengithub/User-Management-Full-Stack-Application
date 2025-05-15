@@ -1,5 +1,6 @@
-<h1>{{title}}</h1>
+<h1 class="text-light">{{title}}</h1>
 <div class="card">
+    <div class="card-header bg-dark text-white">{{title}}</div>
     <div class="card-body">
         <form *ngIf="!loading" [formGroup]="form" (ngSubmit)="onSubmit()">
             <div class="row mb-3">
@@ -29,7 +30,7 @@
             </div>
         </form>
         <div *ngIf="loading" class="text-center">
-            <span class="spinner-border spinner-border-lg align-center"></span>
+            <span class="spinner-border spinner-border-lg align-center text-primary"></span>
         </div>
     </div>
 </div> 

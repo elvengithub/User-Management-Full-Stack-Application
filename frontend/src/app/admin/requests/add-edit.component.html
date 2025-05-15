@@ -1,5 +1,6 @@
-<h1>{{title}}</h1>
+<h1 class="text-light">{{title}}</h1>
 <div class="card">
+    <div class="card-header bg-dark text-white">{{title}}</div>
     <div class="card-body">
         <form *ngIf="!loading" [formGroup]="form" (ngSubmit)="onSubmit()">
             <div class="row mb-3">
@@ -39,14 +40,14 @@
             </div>
         
             
-            <h3 class="mt-4">Request Items</h3>
+            <h3 class="mt-4 text-light">Request Items</h3>
             <button type="button" class="btn btn-sm btn-secondary mb-3" (click)="addItem()">
                 <i class="fas fa-plus"></i> Add Item
             </button>
             
             <div formArrayName="items" class="mb-3">
                 <div *ngFor="let itemForm of itemsFormArray.controls; let i = index" [formGroupName]="i" class="card mb-3">
-                    <div class="card-header d-flex justify-content-between align-items-center">
+                    <div class="card-header d-flex justify-content-between align-items-center bg-dark">
                         <h5 class="mb-0">Item {{i + 1}}</h5>
                         <button type="button" class="btn btn-sm btn-danger" (click)="removeItem(i)">
                             <i class="fas fa-trash"></i>
@@ -83,7 +84,7 @@
             </div>
         </form>
         <div *ngIf="loading" class="text-center">
-            <span class="spinner-border spinner-border-lg align-center"></span>
+            <span class="spinner-border spinner-border-lg align-center text-primary"></span>
         </div>
     </div>
 </div> 

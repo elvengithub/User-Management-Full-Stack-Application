@@ -1,6 +1,6 @@
-<h1>Transfer Request</h1>
+<h1 class="text-light">Transfer Request</h1>
 <div class="card shadow-sm" *ngIf="employee">
-    <div class="card-header bg-white py-3">
+    <div class="card-header bg-dark text-white py-3">
         <div class="d-flex justify-content-between align-items-center">
             <h5 class="mb-0">
                 <span class="badge bg-primary me-2">{{employee.employeeId}}</span>
@@ -31,7 +31,7 @@
                     <div *ngIf="submitted && f.departmentId.errors" class="invalid-feedback">
                         <div *ngIf="f.departmentId.errors.required">Department is required</div>
                     </div>
-                    <div class="form-text mt-2">
+                    <div class="form-text mt-2 text-muted">
                         Select the department you want to transfer this employee to
                     </div>
                 </div>
