@@ -160,33 +160,64 @@ async function update(req, res, next) {
 
 async function _delete(req, res, next) {
     try {
+        console.log(`Attempting to delete employee with ID: ${req.params.id}`);
+        
         const employee = await db.Employee.findByPk(req.params.id);
-        if (!employee) throw new Error('Employee not found');
+        if (!employee) {
+            console.log(`Employee with ID ${req.params.id} not found`);
+            return res.status(404).json({ message: 'Employee not found' });
+        }
         
         // Check if employee has a linked account
         if (employee.accountId) {
-            throw new Error('Cannot delete employee with a linked account. Please unlink the account first.');
+            console.log(`Cannot delete: Employee has linked account ID: ${employee.accountId}`);
+            return res.status(400).json({ 
+                message: 'Cannot delete employee with a linked account. Please unlink the account first.' 
+            });
         }
         
         // Check if employee has any requests
         const hasRequests = await db.Request.findOne({ where: { employeeId: employee.id } });
         if (hasRequests) {
-            throw new Error('Cannot delete employee with existing requests. Please delete requests first.');
+            console.log(`Cannot delete: Employee has existing requests`);
+            return res.status(400).json({ 
+                message: 'Cannot delete employee with existing requests. Please delete requests first.' 
+            });
         }
         
         // Check if employee is a department manager
         const isDepartmentManager = await db.Department.findOne({ where: { managerId: employee.id } });
         if (isDepartmentManager) {
-            throw new Error('Cannot delete employee who is a department manager. Please assign a new manager first.');
+            console.log(`Cannot delete: Employee is manager of department ID: ${isDepartmentManager.id}`);
+            return res.status(400).json({ 
+                message: 'Cannot delete employee who is a department manager. Please assign a new manager first.' 
+            });
         }
         
-        // Delete any workflows associated with this employee
-        await db.Workflow.destroy({ where: { employeeId: employee.id } });
-        
-        // Now delete the employee
-        await employee.destroy();
-        res.json({ message: 'Employee deleted successfully' });
-    } catch (err) { next(err); }
+        try {
+            // Delete any workflows associated with this employee
+            await db.Workflow.destroy({ where: { employeeId: employee.id } });
+            console.log(`Deleted workflows for employee ID: ${employee.id}`);
+            
+            // Now delete the employee
+            await employee.destroy();
+            console.log(`Successfully deleted employee ID: ${employee.id}`);
+            
+            return res.json({ message: 'Employee deleted successfully' });
+        } catch (deleteErr) {
+            console.error(`Error during delete operation: ${deleteErr.message}`);
+            return res.status(500).json({ 
+                message: 'Failed to delete employee',
+                error: deleteErr.message 
+            });
+        }
+    } catch (err) {
+        console.error(`Unexpected error in delete employee: ${err.message}`);
+        return res.status(500).json({ 
+            message: 'Server error while processing delete request',
+            error: err.message 
+        });
+    }
 }
 
 async function transfer(req, res, next) {
