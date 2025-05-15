@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { BehaviorSubject, Observable, catchError, throwError, switchMap, tap, of } from 'rxjs';
+import { BehaviorSubject, Observable, catchError, throwError, switchMap, tap } from 'rxjs';
 import { map, finalize } from 'rxjs/operators';
 
 import { environment } from '../../environments/environment';
 import { Account } from '../../app/_models';
 
-const baseUrl = `${environment.apiUrl}/accounts`;
+const baseUrl = `${environment.apiUrl}`;
 
 @Injectable({ providedIn: 'root' })
 export class AccountService {
@@ -94,8 +94,8 @@ export class AccountService {
         console.error('Login failed:', error);
         
         // Handle CORS errors specially
-        if (error.message && (error.message.includes('Http failure response for') || error.status === 0)) {
-          return throwError(() => new Error('Cannot connect to authentication server. Check your network connection and try again.'));
+        if (error.message && error.message.includes('Http failure response for')) {
+          return throwError(() => new Error('Cannot connect to authentication server. Please try again later.'));
         }
         
         // Transform the error to a more user-friendly message
@@ -210,14 +210,11 @@ export class AccountService {
     let body = {};
     if (fallbackToken && fallbackToken !== 'null' && fallbackToken !== 'undefined') {
       console.log('Using fallback token from localStorage');
-      body = { token: fallbackToken };
+      body = { refreshToken: fallbackToken };
     } else {
       console.log('No fallback token available in localStorage');
     }
     
-    console.log(`Sending refresh token request to: ${baseUrl}/refresh-token`);
-    console.log('Request body:', body);
-
     return this.http.post<any>(
       `${baseUrl}/refresh-token`, 
       body, 
@@ -255,20 +252,11 @@ export class AccountService {
         return updatedAccount;
       }),
       catchError(error => {
-        console.error('Refresh token failed:', error);
+        console.error('Token refresh failed:', error);
         
-        // If we get unauthorized or forbidden, clear the user state
-        if (error.status === 401 || error.status === 403 || error.status === 0) {
-          // Clear user state and redirect to login
-          this.stopRefreshTokenTimer();
-          this.accountSubject.next(null);
-          localStorage.removeItem('account');
-          localStorage.removeItem('refreshToken');
-          
-          // Add a small delay before redirecting to allow error messages to be shown
-          setTimeout(() => {
-            this.router.navigate(['/account/login']);
-          }, 100);
+        // Only cleanup and redirect if it's a true authentication error
+        if (error.status === 401 || error.status === 403) {
+          this.cleanupAndRedirect();
         }
         
         return throwError(() => new Error('Session expired. Please login again.'));
@@ -390,117 +378,36 @@ export class AccountService {
     );
   }
 
-  // Analytics methods
-  getUserStats() {
-    return this.http.get<any>(`${baseUrl}/analytics/user-stats`, this.getHttpOptions());
-  }
-
-  getOnlineUsers() {
-    return this.http.get<Account[]>(`${baseUrl}/analytics/online-users`, this.getHttpOptions());
-  }
-
   // helper methods
-
   public testConnection(): Observable<any> {
-    // When using fake backend, return successful connection immediately
-    if (environment.useFakeBackend) {
-      return of({
-        status: 'success',
-        message: 'Using fake backend (no API connection needed)',
-        timestamp: new Date().toISOString(),
-        environment: environment.detectedEnvironment
-      });
-    }
-
-    // Try to connect to the public test endpoint
-    return this.http.get(`${environment.apiUrl}/public-test`).pipe(
-      catchError(error => {
-        console.error('API connection test failed:', error);
-        return throwError(() => ({
-          status: 'error',
-          message: 'Failed to connect to API',
-          error: error
-        }));
-      })
-    );
+    return this.http.get<any>(`${baseUrl}/connection-test`, this.getHttpOptions())
+      .pipe(
+        tap(response => console.log('Connection test response:', response)),
+        catchError(error => {
+          console.error('Connection test failed:', error);
+          return throwError(() => error);
+        })
+      );
   }
 
   // Verify authentication status - useful for page refresh
   verifyAuth() {
-    // Don't verify if no account exists
-    if (!this.accountValue) {
-      return;
-    }
-
-    // Skip verification when using fake backend
-    if (environment.useFakeBackend) {
-      console.log('Using fake backend, skipping auth verification');
-      return;
-    }
-
-    // Use the getById endpoint to verify our JWT works
-    this.getById(this.accountValue.id.toString())
-      .pipe(
-        catchError(error => {
-          console.error('Auth verification failed:', error);
-          // If verification fails, log out the user
-          this.cleanupAndRedirect();
-          return throwError(() => error);
-        })
-      )
-      .subscribe({
-        next: (account) => {
-          console.log('Auth verification successful');
+    // If we have an account stored, try to refresh the token
+    if (this.accountValue && this.accountValue.jwtToken) {
+      console.log('Verifying authentication status on page load/refresh');
+      this.refreshToken().subscribe({
+        next: () => {
+          console.log('Authentication verified successfully');
+          // No need to do anything else here, the token is refreshed
+        },
+        error: (error) => {
+          console.error('Authentication verification failed:', error);
+          // Only clean up if truly invalid, not for network errors
+          if (error.status === 401 || error.status === 403) {
+            this.cleanupAndRedirect();
+          }
         }
       });
-  }
-
-  // Add this method after the testConnection method
-  public getConnectionInfo(): Observable<any> {
-    console.log(`Checking connection to: ${baseUrl}`);
-    
-    // Use the public endpoint that doesn't require authentication
-    return this.http.get<any>(`${baseUrl}/public-test`, { 
-      headers: new HttpHeaders({
-        'Content-Type': 'application/json'
-      }),
-      withCredentials: true 
-    }).pipe(
-      map(response => {
-        return {
-          status: 'success',
-          endpoint: baseUrl,
-          environment: environment.detectedEnvironment,
-          response: response
-        };
-      }),
-      catchError(error => {
-        return of({
-          status: 'error',
-          endpoint: baseUrl,
-          environment: environment.detectedEnvironment,
-          error: error.message || 'Connection failed'
-        });
-      })
-    );
-  }
-
-  // Add this method to check the current deployment
-  public getDeploymentInfo(): any {
-    const hostname = window.location.hostname;
-    const protocol = window.location.protocol;
-    const fullUrl = window.location.href;
-    const apiEndpoint = environment.apiUrl;
-    
-    return {
-      currentUrl: fullUrl,
-      hostname: hostname,
-      protocol: protocol,
-      isVercel: hostname.includes('vercel.app'),
-      isRender: hostname.includes('render.com'),
-      isLocalhost: hostname === 'localhost' || hostname === '127.0.0.1',
-      apiEndpoint: apiEndpoint,
-      environment: environment.detectedEnvironment
-    };
+    }
   }
 }

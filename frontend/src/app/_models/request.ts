@@ -1,16 +1,19 @@
-export interface Request {
-    id?: string;
-    type: string;
-    employeeId: string;
-    employee?: any;
-    requestItems: RequestItem[];
-    status: string;
+import { Employee } from './employee';
+import { RequestItem } from './request-item';
+
+export class Request {
+    id?: number;
+    employeeId?: number;
+    status?: 'Pending' | 'Approved' | 'Rejected';
+    type?: string;
     created?: Date;
     updated?: Date;
-}
-
-export interface RequestItem {
-    id?: string;
-    name: string;
-    quantity: number;
+    
+    // Navigation properties
+    employee?: Employee;
+    items?: RequestItem[];
+    
+    // UI properties
+    isDeleting?: boolean;
+    updating?: boolean;
 } 

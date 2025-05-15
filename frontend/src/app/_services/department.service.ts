@@ -1,31 +1,55 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { Department } from '../_models/department';
+
+const baseUrl = environment.apiUrl.replace('/accounts', '');
 
 @Injectable({ providedIn: 'root' })
 export class DepartmentService {
-    private baseUrl = `${environment.apiUrl}/departments`;
-
     constructor(private http: HttpClient) { }
 
-    getAll(): Observable<any[]> {
-        return this.http.get<any[]>(this.baseUrl);
+    private getHttpOptions() {
+        const accountJson = localStorage.getItem('account');
+        if (!accountJson) return {};
+        
+        try {
+            const account = JSON.parse(accountJson);
+            return {
+                headers: new HttpHeaders({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${account.jwtToken}`
+                })
+            };
+        } catch (error) {
+            console.error('Error parsing account from localStorage', error);
+            return {};
+        }
     }
 
-    getById(id: string): Observable<any> {
-        return this.http.get<any>(`${this.baseUrl}/${id}`);
+    getAll(): Observable<Department[]> {
+        return this.http.get<Department[]>(`${baseUrl}/departments`, this.getHttpOptions())
+            .pipe(catchError(error => {
+                console.error('Error fetching departments:', error);
+                return of([]);
+            }));
     }
 
-    create(department: any): Observable<any> {
-        return this.http.post<any>(this.baseUrl, department);
+    getById(id: number): Observable<Department> {
+        return this.http.get<Department>(`${baseUrl}/departments/${id}`, this.getHttpOptions());
     }
 
-    update(id: string, department: any): Observable<any> {
-        return this.http.put<any>(`${this.baseUrl}/${id}`, department);
+    create(department: Department): Observable<Department> {
+        return this.http.post<Department>(`${baseUrl}/departments`, department, this.getHttpOptions());
     }
 
-    delete(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    update(id: number, department: Department): Observable<Department> {
+        return this.http.put<Department>(`${baseUrl}/departments/${id}`, department, this.getHttpOptions());
+    }
+
+    delete(id: number): Observable<any> {
+        return this.http.delete<any>(`${baseUrl}/departments/${id}`, this.getHttpOptions());
     }
 } 

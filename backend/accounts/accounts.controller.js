@@ -8,8 +8,6 @@ const accountService = require('./account.service');
 const db = require('../_helpers/db');
 
 // routes
-router.get('/public-test', publicTest); // Public endpoint for testing API connectivity
-router.get('/connection-test', connectionTest); // Another public endpoint for general connectivity testing
 router.post('/authenticate', authenticateSchema, authenticate);
 router.post('/refresh-token', refreshToken);
 router.post('/revoke-token', authorize(), revokeTokenSchema, revokeToken);
@@ -26,47 +24,8 @@ router.delete('/:id', authorize(), _delete);
 // Debug routes
 router.get('/debug/tokens', authorize(), getActiveTokens);
 router.post('/debug/clear-tokens', authorize(), clearInactiveTokens);
-router.post('/set-offline', authorize(), setOffline);
 
 module.exports = router;
-
-// Public test endpoint for API connectivity check
-function publicTest(req, res, next) {
-    // Get origin for debugging
-    const origin = req.get('origin') || 'Unknown origin';
-    const fullUrl = req.protocol + '://' + req.get('host') + req.originalUrl;
-    
-    res.json({ 
-        status: 'success',
-        message: 'API is working properly',
-        timestamp: new Date().toISOString(),
-        server: 'User Management API',
-        request: {
-            origin: origin,
-            url: fullUrl,
-            headers: {
-                'user-agent': req.get('user-agent'),
-                'content-type': req.get('content-type'),
-                'accept': req.get('accept')
-            }
-        },
-        env: process.env.NODE_ENV || 'development',
-        cors: {
-            enabled: true,
-            origins: ['vercel.app', 'render.com', 'localhost']
-        }
-    });
-}
-
-// Another public test endpoint for UI connectivity testing
-function connectionTest(req, res, next) {
-    res.json({ 
-        status: 'success',
-        message: 'Connection test successful',
-        timestamp: new Date().toISOString(),
-        server: 'Node.js API'
-    });
-}
 
 function authenticateSchema(req, res, next) {
     const schema = Joi.object({
@@ -317,7 +276,7 @@ function setTokenCookie(res, token) {
         sameSite: isProduction ? 'none' : 'lax',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days in milliseconds
         path: '/',
-        domain: isProduction ? undefined : undefined // Allow cookie to work across subdomains in production
+        domain: isProduction ? '.vercel.app' : undefined // Allow cookie to work across subdomains in production
     };
 
     // Set the cookie
@@ -383,17 +342,4 @@ function clearInactiveTokens(req, res, next) {
         res.json({ message: `${count} inactive tokens cleared` });
     })
     .catch(next);
-}
-
-function setOffline(req, res, next) {
-    const userId = req.body.userId;
-    if (!userId) {
-        return res.status(400).json({ message: 'User ID is required' });
-    }
-
-    accountService.setOffline(userId)
-        .then(() => {
-            res.json({ message: 'User marked as offline' });
-        })
-        .catch(next);
 }

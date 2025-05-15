@@ -1,29 +1,14 @@
 {
   "development": {
     "database": {
-      "dialect": "mysql",
-      "host": "153.92.15.31",
-      "port": 3306,
-      "username": "u875409848_diaz",
-      "password": "9T2Z5$3UKkgSYzE",
-      "database": "u875409848_diaz",
-      "timezone": "+00:00",
-      "define": {
-        "freezeTableName": false,
-        "timestamps": true,
-        "createdAt": "created",
-        "updatedAt": "updated"
-      },
-      "dialectOptions": {
-        "connectTimeout": 60000
-      }
+      "url": "postgresql://postgres:EfVRAdhxNwNZtpaeoCxmwAPugBaceNtc@turntable.proxy.rlwy.net:41561/railway"
     },
     "secret": "STARTTLS_DEV_SECRET",
     "emailFrom": "elvendiaz05@gmail.com",
     "smtpOptions": {
       "host": "smtp.gmail.com",
-      "port": 587,
-      "secure": false,
+      "port": 465,
+      "secure": true,
       "auth": {
         "user": "elvendiaz05@gmail.com",
         "pass": "efff ijhn wpbs arag"
@@ -39,31 +24,16 @@
   },
   "production": {
     "database": {
-      "dialect": "mysql",
-      "host": "153.92.15.31",
-      "port": 3306,
-      "username": "u875409848_diaz",
-      "password": "9T2Z5$3UKkgSYzE",
-      "database": "u875409848_diaz",
-      "timezone": "+00:00",
-      "define": {
-        "freezeTableName": false,
-        "timestamps": true,
-        "createdAt": "created",
-        "updatedAt": "updated"
-      },
-      "dialectOptions": {
-        "connectTimeout": 60000
-      }
+      "url": "postgresql://postgres:EfVRAdhxNwNZtpaeoCxmwAPugBaceNtc@turntable.proxy.rlwy.net:41561/railway"
     },
     "secret": "STARTTLS",
     "emailFrom": "elvendiaz05@gmail.com",
     "smtpOptions": {
       "host": "smtp.gmail.com",
-      "port": 587,
-      "secure": false,
+      "port": 465,
+      "secure": true,
       "auth": {
-         "user": "elvendiaz05@gmail.com",
+        "user": "elvendiaz05@gmail.com",
         "pass": "efff ijhn wpbs arag"
       },
       "tls": {

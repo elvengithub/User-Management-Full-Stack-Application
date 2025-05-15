@@ -7,6 +7,7 @@ import { FormsModule } from '@angular/forms';
 import { AdminRoutingModule } from './admin-routing.module';
 import { LayoutComponent } from './layout.component';
 import { OverViewComponent } from './overview.component';
+import { SubNavComponent } from './subnav.component';
 
 @NgModule({
   imports: [
@@ -17,7 +18,8 @@ import { OverViewComponent } from './overview.component';
   ],
   declarations: [
     LayoutComponent,
-    OverViewComponent
+    OverViewComponent,
+    SubNavComponent
   ]
 })
 export class AdminModule { }

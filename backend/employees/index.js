@@ -104,7 +104,8 @@ async function getUsers(req, res, next) {
     try {
         // Get all accounts that can be assigned to employees
         const users = await db.Account.findAll({
-            attributes: ['id', 'email', 'firstName', 'lastName', 'role']
+            attributes: ['id', 'email', 'firstName', 'lastName', 'role'],
+            where: { status: 'Active' }
         });
         res.json(users);
     } catch (err) { next(err); }
@@ -190,104 +191,45 @@ async function _delete(req, res, next) {
 
 async function transfer(req, res, next) {
     try {
-        console.log('Transfer request received:', {
-            employeeId: req.params.id,
-            newDepartmentId: req.body.departmentId,
-            body: req.body
-        });
-        
         const employee = await db.Employee.findByPk(req.params.id);
         if (!employee) throw new Error('Employee not found');
         
         // Store old department info
         const oldDepartmentId = employee.departmentId;
         let oldDepartment = null;
-        let oldDepartmentName = 'None';
-        
         if (oldDepartmentId) {
             oldDepartment = await db.Department.findByPk(oldDepartmentId);
-            if (oldDepartment) {
-                oldDepartmentName = oldDepartment.name;
-            }
         }
         
         // Get new department info
         let newDepartment = null;
-        let newDepartmentName = 'Unknown';
-        const newDepartmentId = parseInt(req.body.departmentId);
-        
-        if (!isNaN(newDepartmentId)) {
-            newDepartment = await db.Department.findByPk(newDepartmentId);
-            if (!newDepartment) {
-                throw new Error('New department not found');
-            }
-            newDepartmentName = newDepartment.name;
-        } else {
-            throw new Error('New department ID is required and must be a valid number');
+        if (req.body.departmentId) {
+            newDepartment = await db.Department.findByPk(req.body.departmentId);
         }
         
         // Check if department has actually changed
-        if (oldDepartmentId === newDepartmentId) {
+        if (oldDepartmentId === req.body.departmentId) {
             return res.json({
                 message: 'Employee is already in this department',
-                departmentId: newDepartmentId,
-                departmentName: newDepartmentName
+                departmentId: req.body.departmentId,
+                departmentName: newDepartment ? newDepartment.name : 'Unknown'
             });
         }
         
-        // Create a workflow entry for the transfer - Status is PENDING until approved
-        const workflowDetails = {
-            employeeId: employee.id,
-            employeeName: `${employee.firstName} ${employee.lastName}`,
-            // Ensure all property variations are included for maximum compatibility
-            // Store department IDs as numbers to prevent type issues
-            oldDepartmentId: parseInt(oldDepartmentId) || null,
-            newDepartmentId: newDepartmentId,
-            departmentId: newDepartmentId,
-            targetDepartmentId: newDepartmentId,
-            toDepartmentId: newDepartmentId,
-            // Include department names
-            oldDepartmentName: oldDepartmentName,
-            newDepartmentName: newDepartmentName,
-            // Alternative property names for UI compatibility 
-            from: oldDepartmentName,
-            to: newDepartmentName,
-            fromDepartment: oldDepartmentName, 
-            toDepartment: newDepartmentName,
-            fromDepartmentName: oldDepartmentName,
-            toDepartmentName: newDepartmentName,
-            sourceDepartment: oldDepartmentName,
-            targetDepartment: newDepartmentName,
-            // Message
-            message: `Request to transfer employee from ${oldDepartmentName} to ${newDepartmentName}`
-        };
+        // Update employee
+        await employee.update({ departmentId: req.body.departmentId });
         
-        console.log('Creating workflow with details:', JSON.stringify(workflowDetails, null, 2));
-        
-        const workflow = await db.Workflow.create({
-            employeeId: employee.id,
-            type: 'Employee Transfer',
-            status: 'Pending', // Changed from 'Completed' to 'Pending'
-            details: workflowDetails
-        });
-        
-        // Return response with details - but department hasn't changed yet
+        // Let frontend handle the workflow creation
         res.json({ 
-            message: 'Transfer request submitted for approval',
-            employee: employee.toJSON(),
-            workflow: workflow.toJSON(),
-            from: oldDepartmentName,
-            to: newDepartmentName,
-            oldDepartmentId,
-            newDepartmentId: newDepartmentId,
-            oldDepartmentName,
-            newDepartmentName,
-            status: 'Pending'
+            message: 'Employee transferred successfully',
+            from: oldDepartment ? oldDepartment.name : 'None',
+            to: newDepartment ? newDepartment.name : 'Unknown',
+            oldDepartmentId: oldDepartmentId,
+            newDepartmentId: req.body.departmentId,
+            oldDepartmentName: oldDepartment ? oldDepartment.name : 'None',
+            newDepartmentName: newDepartment ? newDepartment.name : 'Unknown',
         });
-    } catch (err) {
-        console.error('Transfer error:', err);
-        next(err);
-    }
+    } catch (err) { next(err); }
 }
 
 module.exports = router; 
