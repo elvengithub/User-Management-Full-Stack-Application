@@ -55,9 +55,13 @@
                     </div>
                     <div class="card-body">
                         <div class="row mb-3">
-                            <label class="col-md-3 col-form-label">Name</label>
+                            <label class="col-md-3 col-form-label">Name *</label>
                             <div class="col-md-9">
-                                <input type="text" formControlName="name" class="form-control" />
+                                <input type="text" formControlName="name" class="form-control" 
+                                    [ngClass]="{ 'is-invalid': submitted && itemsFormArray.at(i).get('name')?.errors }" required />
+                                <div *ngIf="submitted && itemsFormArray.at(i).get('name')?.errors" class="invalid-feedback">
+                                    <div *ngIf="itemsFormArray.at(i).get('name')?.errors?.['required']">Name is required</div>
+                                </div>
                             </div>
                         </div>
                         <div class="row mb-3">
