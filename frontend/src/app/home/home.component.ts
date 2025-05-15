@@ -1,57 +1,103 @@
 import { Component, OnInit } from '@angular/core';
-import { AccountService } from '../_services';
-import { first } from 'rxjs/operators';
-import { environment } from '../../environments/environment';
-import { Role } from '../_models';
 
-@Component({ templateUrl: 'home.component.html' })
+import { AccountService } from '../../app/_services';
+import { Role } from '../../app/_models';
+
+@Component({
+    templateUrl: 'home.component.html',
+    styles: [`
+        .welcome-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        
+        .welcome-text {
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .welcome-shape {
+            position: absolute;
+            bottom: -30px;
+            right: -30px;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            z-index: 0;
+        }
+        
+        .welcome-shape-2 {
+            position: absolute;
+            top: -30px;
+            left: -30px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            z-index: 0;
+        }
+        
+        .feature-card {
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .card-title-icon {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .user-avatar {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background-color: #e0e7ff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+        
+        .dashboard-card {
+            border-radius: 12px;
+            height: 100%;
+            transition: all 0.3s ease;
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+        
+        .dashboard-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+    `]
+})
 export class HomeComponent implements OnInit {
     account: any;
-    apiEnvironment = environment.detectedEnvironment;
-    apiEndpoint = environment.apiUrl;
-    isProduction = environment.production;
-    connectionInfo: any = null;
-    connectionTesting = false;
     Role = Role;
 
     constructor(private accountService: AccountService) {}
     
     ngOnInit() {
-        // Keep track of account changes
         this.accountService.account.subscribe(x => {
             this.account = x;
         });
-        
-        // Only test connection automatically for admin users
-        if (!environment.production && this.account?.role === 'Admin') {
-            this.testConnection();
-        }
-    }
-    
-    testConnection() {
-        this.connectionTesting = true;
-        // Use public-test endpoint that doesn't require authentication
-        this.accountService.testConnection()
-            .pipe(first())
-            .subscribe({
-                next: (info) => {
-                    this.connectionInfo = {
-                        status: 'success',
-                        endpoint: this.apiEndpoint,
-                        environment: this.apiEnvironment,
-                        response: info
-                    };
-                    this.connectionTesting = false;
-                    console.log('Connection info:', this.connectionInfo);
-                },
-                error: (error) => {
-                    console.error('Connection test error:', error);
-                    this.connectionTesting = false;
-                    this.connectionInfo = {
-                        status: 'error',
-                        error: error.message || 'Failed to connect'
-                    };
-                }
-            });
     }
 }

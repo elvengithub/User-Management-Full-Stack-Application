@@ -9,6 +9,23 @@ async function cleanupDuplicateTransfers() {
     try {
         console.log('Starting cleanup of duplicate Transfer workflows...');
         
+        // Check if Workflow model is defined
+        if (!db.Workflow) {
+            console.log('Workflow model not defined, skipping cleanup');
+            return 0;
+        }
+        
+        // Check if the workflows table exists
+        try {
+            await db.Workflow.findOne();
+        } catch (error) {
+            if (error.name === 'SequelizeDatabaseError' && error.parent && error.parent.code === '42P01') {
+                console.log('Workflows table does not exist yet, skipping cleanup');
+                return 0;
+            }
+            throw error; // Re-throw if it's a different error
+        }
+        
         // Get all workflow records
         const allWorkflows = await db.Workflow.findAll({
             where: { type: 'Transfer' },
@@ -72,13 +89,30 @@ async function cleanupDuplicateTransfers() {
         return deletedCount;
     } catch (error) {
         console.error('Error during workflow cleanup:', error);
-        throw error;
+        return 0; // Return 0 instead of throwing error
     }
 }
 
 async function cleanupDuplicateRequestApprovals() {
     try {
         console.log('Starting cleanup of duplicate Request Approval workflows...');
+        
+        // Check if Workflow model is defined
+        if (!db.Workflow) {
+            console.log('Workflow model not defined, skipping cleanup');
+            return 0;
+        }
+        
+        // Check if the workflows table exists
+        try {
+            await db.Workflow.findOne();
+        } catch (error) {
+            if (error.name === 'SequelizeDatabaseError' && error.parent && error.parent.code === '42P01') {
+                console.log('Workflows table does not exist yet, skipping cleanup');
+                return 0;
+            }
+            throw error; // Re-throw if it's a different error
+        }
         
         // Get all Request Approval workflow records
         const approvalWorkflows = await db.Workflow.findAll({
@@ -128,7 +162,7 @@ async function cleanupDuplicateRequestApprovals() {
         return deletedCount;
     } catch (error) {
         console.error('Error during request approval workflow cleanup:', error);
-        throw error;
+        return 0; // Return 0 instead of throwing error
     }
 }
 
@@ -142,7 +176,7 @@ async function cleanupAllDuplicateWorkflows() {
         return totalCount;
     } catch (error) {
         console.error('Error during complete workflow cleanup:', error);
-        throw error;
+        return 0; // Return 0 instead of throwing error
     }
 }
 

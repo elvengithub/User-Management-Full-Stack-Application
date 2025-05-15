@@ -1,40 +1,67 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
+import { Request } from '../_models/request';
+
+const baseUrl = environment.apiUrl.replace('/accounts', '');
 
 @Injectable({ providedIn: 'root' })
 export class RequestService {
-    private baseUrl = `${environment.apiUrl}/requests`;
-
     constructor(private http: HttpClient) { }
 
-    getAll(): Observable<any[]> {
-        return this.http.get<any[]>(this.baseUrl);
+    private getHttpOptions() {
+        const accountJson = localStorage.getItem('account');
+        if (!accountJson) return {};
+        
+        try {
+            const account = JSON.parse(accountJson);
+            return {
+                headers: new HttpHeaders({
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${account.jwtToken}`
+                })
+            };
+        } catch (error) {
+            console.error('Error parsing account from localStorage', error);
+            return {};
+        }
     }
 
-    getById(id: string): Observable<any> {
-        return this.http.get<any>(`${this.baseUrl}/${id}`);
+    getAll(): Observable<Request[]> {
+        return this.http.get<Request[]>(`${baseUrl}/requests`, this.getHttpOptions())
+            .pipe(catchError(error => {
+                console.error('Error fetching requests:', error);
+                return of([]);
+            }));
     }
 
-    getByEmployee(employeeId: string): Observable<any[]> {
-        return this.http.get<any[]>(`${this.baseUrl}/employee/${employeeId}`);
+    getById(id: number): Observable<Request> {
+        return this.http.get<Request>(`${baseUrl}/requests/${id}`, this.getHttpOptions());
     }
 
-    create(request: any): Observable<any> {
-        return this.http.post<any>(this.baseUrl, request);
+    getByEmployeeId(employeeId: number): Observable<Request[]> {
+        return this.http.get<Request[]>(`${baseUrl}/requests/employee/${employeeId}`, this.getHttpOptions())
+            .pipe(catchError(error => {
+                console.error(`Error fetching requests for employee ${employeeId}:`, error);
+                return of([]);
+            }));
     }
 
-    update(id: string, request: any): Observable<any> {
-        return this.http.put<any>(`${this.baseUrl}/${id}`, request);
+    create(request: Request): Observable<Request> {
+        return this.http.post<Request>(`${baseUrl}/requests`, request, this.getHttpOptions());
     }
 
-    updateStatus(id: string, status: string): Observable<any> {
-        console.log(`Updating request ${id} status to ${status}`);
-        return this.http.put<any>(`${this.baseUrl}/${id}/status`, { status });
+    update(id: number, request: Request): Observable<Request> {
+        return this.http.put<Request>(`${baseUrl}/requests/${id}`, request, this.getHttpOptions());
     }
 
-    delete(id: string): Observable<void> {
-        return this.http.delete<void>(`${this.baseUrl}/${id}`);
+    delete(id: number): Observable<any> {
+        return this.http.delete<any>(`${baseUrl}/requests/${id}`, this.getHttpOptions());
+    }
+
+    updateStatus(id: number, status: string): Observable<Request> {
+        return this.http.put<Request>(`${baseUrl}/requests/${id}/status`, { status }, this.getHttpOptions());
     }
 } 

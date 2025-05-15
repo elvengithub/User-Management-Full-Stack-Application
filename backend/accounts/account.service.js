@@ -28,8 +28,7 @@ module.exports = {
     create,
     update,
     delete: _delete,
-    getAllAccounts,
-    setOffline
+    getAllAccounts
 };
 
 async function authenticate({ email, password, ipAddress }) {
@@ -51,10 +50,6 @@ async function authenticate({ email, password, ipAddress }) {
     if (!isPasswordValid) {
         throw 'Password is incorrect';
     }
-
-    account.isOnline = true;
-    account.lastActive = new Date();
-    await account.save();
 
     const jwtToken = generateJwtToken(account);
     const refreshToken = generateRefreshToken(account, ipAddress);
@@ -82,10 +77,6 @@ async function refreshToken({ token, ipAddress }) {
             throw 'Account is inactive';
         }
 
-        account.isOnline = true;
-        account.lastActive = new Date();
-        await account.save();
-
         const newRefreshToken = generateRefreshToken(account, ipAddress);
         refreshToken.revoked = Date.now();
         refreshToken.revokedByIp = ipAddress;
@@ -109,11 +100,6 @@ async function refreshToken({ token, ipAddress }) {
 
 async function revokeToken({ token, ipAddress }) {
     const refreshToken = await getRefreshToken(token);
-    
-    const account = await refreshToken.getAccount();
-    account.isOnline = false;
-    account.lastActive = new Date();
-    await account.save();
     
     refreshToken.revoked = Date.now();
     refreshToken.revokedByIp = ipAddress;
@@ -317,8 +303,8 @@ function randomTokenString() {
 }
 
 function basicDetails(account) {
-    const { id, title, firstName, lastName, email, role, created, updated, status, isVerified, isOnline, lastActive } = account;
-    return { id, title, firstName, lastName, email, role, created, updated, status, isVerified, isOnline, lastActive };
+    const { id, title, firstName, lastName, email, role, created, updated, status, isVerified } = account;
+    return { id, title, firstName, lastName, email, role, created, updated, status, isVerified };
 }
 
 async function sendVerificationEmail(account, origin) {
@@ -631,17 +617,4 @@ async function sendPasswordResetEmail(account, origin) {
         subject: 'Password Reset Request',
         html: emailTemplate
     });
-}
-
-async function setOffline(userId) {
-    const account = await db.Account.findByPk(userId);
-    if (!account) {
-        throw 'Account not found';
-    }
-
-    account.isOnline = false;
-    account.lastActive = new Date();
-    await account.save();
-
-    return account;
 }

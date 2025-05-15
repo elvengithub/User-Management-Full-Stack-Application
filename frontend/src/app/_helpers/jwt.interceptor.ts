@@ -18,9 +18,11 @@ export class JwtInterceptor implements HttpInterceptor {
     const account = this.accountService.accountValue;
     const isLoggedIn = account?.jwtToken;
     
-    // Check if request is to any of our API endpoints - ensure Render endpoint is prioritized
+    // Check if request is to any of our API endpoints
     const isApiUrl = request.url.includes(environment.apiUrl) || 
-                    request.url.includes('user-management-full-stack-application.onrender.com');
+                    request.url.includes('user-management-system-angular.onrender.com') ||
+                    request.url.includes('user-management-system-angular-tm8z.vercel.app') ||
+                    request.url.includes('localhost:4000');
                     
     const isRefreshTokenRequest = request.url.includes('/refresh-token');
     const isRevokeTokenRequest = request.url.includes('/revoke-token');
@@ -95,32 +97,7 @@ export class JwtInterceptor implements HttpInterceptor {
         catchError((err) => {
           console.error('Token refresh failed, logging out user:', err);
           this.isRefreshing = false;
-          
-          // Check if logout method exists before calling it
-          if (this.accountService && typeof this.accountService.logout === 'function') {
-            try {
-              this.accountService.logout();
-            } catch (e) {
-              console.error('Error in accountService.logout:', e);
-              // Fallback: manually clear storage and redirect
-              if (window.localStorage) {
-                localStorage.removeItem('account');
-                localStorage.removeItem('refreshToken');
-              }
-              // Redirect to login page
-              window.location.href = '/account/login';
-            }
-          } else {
-            console.error('AccountService logout method not available');
-            // Fallback: manually clear storage and redirect
-            if (window.localStorage) {
-              localStorage.removeItem('account');
-              localStorage.removeItem('refreshToken');
-            }
-            // Redirect to login page
-            window.location.href = '/account/login';
-          }
-          
+          this.accountService.logout();
           return throwError(() => new Error('Session expired. Please login again.'));
         }),
         finalize(() => {
@@ -145,6 +122,7 @@ export class JwtInterceptor implements HttpInterceptor {
 
   private addTokenHeader(request: HttpRequest<any>, token: string) {
     console.log(`Adding refreshed token to request: ${request.method} ${request.url}`);
+    console.log(`New JWT token: ${token.substring(0, 20)}...`);
     
     return request.clone({
       setHeaders: {

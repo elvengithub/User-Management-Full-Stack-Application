@@ -24,18 +24,7 @@ export class AppInitializer {
           error: (error) => {
             console.error('Token refresh failed during app initialization:', error);
             // If token refresh fails, logout and redirect to login page
-            if (this.accountService && typeof this.accountService.logout === 'function') {
-              try {
-                this.accountService.logout();
-              } catch (e) {
-                console.error('Error in accountService.logout:', e);
-                // Fallback: manually clear storage
-                if (window.localStorage) {
-                  localStorage.removeItem('account');
-                  localStorage.removeItem('refreshToken');
-                }
-              }
-            }
+            this.accountService.logout();
             resolve();
           }
         });

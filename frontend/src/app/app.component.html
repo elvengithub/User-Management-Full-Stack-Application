@@ -1,28 +1,36 @@
 <div class="app-container" [ngClass]="{ 'bg-light': account }">
     <!-- main nav -->
-    <nav class="navbar navbar-expand navbar-dark bg-dark" *ngIf="account">
-      <div class="navbar-nav">
-        <!-- Common links for all users -->
-        <a class="nav-item nav-link" routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
-        
-        <!-- Admin-only links -->
-        <ng-container *ngIf="account?.role === Role.Admin">
-          <a class="nav-item nav-link" routerLink="/employees" routerLinkActive="active">Employees</a>
-          <a class="nav-item nav-link" routerLink="/departments" routerLinkActive="active">Departments</a>
-          <a class="nav-item nav-link" routerLink="/requests" routerLinkActive="active">Requests</a>
-          <a class="nav-item nav-link" routerLink="/admin" routerLinkActive="active">Admin</a>
-        </ng-container>
-        
-        <!-- Account management -->
-        <a class="nav-item nav-link" routerLink="/profile" routerLinkActive="active">Profile</a>
-        <button class="btn btn-link nav-item nav-link" (click)="logout()">Logout</button>
-      </div>
-      <!-- Environment indicator visible only during development -->
-      <div class="ms-auto" *ngIf="!isProduction">
-        <span class="badge bg-info text-white">{{detectedEnv}} API</span>
-        <span class="badge ms-2" [ngClass]="{'bg-danger': account?.role !== Role.Admin, 'bg-success': account?.role === Role.Admin}">
-          Role: {{account?.role}}
-        </span>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary" *ngIf="account">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="#">User-Management</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" 
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+          <ul class="navbar-nav ms-auto">
+            <li class="nav-item">
+              <a routerLink="/" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" class="nav-link">
+                <i class="fas fa-home me-1"></i> Home
+              </a>
+            </li>
+            <li class="nav-item">
+              <a routerLink="/profile" routerLinkActive="active" class="nav-link">
+                <i class="fas fa-user me-1"></i> Profile
+              </a>
+            </li>
+            <li class="nav-item" *ngIf="account.role === Role.Admin">
+              <a routerLink="/admin" routerLinkActive="active" class="nav-link">
+                <i class="fas fa-cog me-1"></i> Admin
+              </a>
+            </li>
+            <li class="nav-item">
+              <a (click)="logout()" class="nav-link logout-link">
+                <i class="fas fa-sign-out-alt me-1"></i> Logout
+              </a>
+            </li>
+          </ul>
+        </div>
       </div>
     </nav>
   
@@ -33,15 +41,8 @@
     <alert></alert>
   
     <!-- main router outlet -->
-    <div class="container mt-4">
+    <div class="container-fluid px-4 mt-3">
       <router-outlet></router-outlet>
     </div>
 </div>
-
-<!-- Footer -->
-<footer *ngIf="account">
-    <div class="footer-content">
-        <p>User Management System &copy; 2023</p>
-    </div>
-</footer>
   

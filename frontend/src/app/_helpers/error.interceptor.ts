@@ -10,43 +10,60 @@ export class ErrorInterceptor implements HttpInterceptor {
     constructor(private accountService: AccountService) {}
 
     intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
-        return next.handle(request).pipe(catchError(err => {
-            // Log all HTTP errors for debugging
-            console.error('HTTP Error Intercepted:', {
-                url: request.url,
-                method: request.method,
-                statusCode: err.status,
-                message: err.message,
-                error: err.error
-            });
+        return next.handle(request).pipe(
+            catchError((error: HttpErrorResponse) => {
+                // Check if the request is a refresh token request
+                const isRefreshTokenRequest = request.url.includes('/refresh-token');
+                const isAuthRequest = request.url.includes('/authenticate');
+                
+                // Don't logout for API calls to non-account endpoints
+                const isAccountEndpoint = request.url.includes('/accounts/');
+                
+                if ([401, 403].includes(error.status)) {
+                    // Auto logout if 401/403 response but only for account endpoints, not for:
+                    // 1. login/authentication requests
+                    // 2. refresh token requests
+                    // 3. regular API endpoints (non-account endpoints)
+                    if (error.status === 401 && !isAuthRequest && !isRefreshTokenRequest && isAccountEndpoint) {
+                        console.log('401 error for account endpoint, logging out');
+                        this.accountService.logout();
+                    } else {
+                        console.log('401 error for API endpoint, not logging out');
+                    }
 
-            // Handle specific status codes
-            if (err instanceof HttpErrorResponse) {
-                // Network error (no connection to server)
-                if (err.status === 0) {
-                    return throwError(() => new Error('Network error - Cannot connect to the server. Please check your internet connection.'));
+                    const errorMessage = error.error?.message || 'Unauthorized access';
+                    return throwError(() => new Error(errorMessage));
                 }
-                
-                // Unauthorized or Forbidden errors (handled by JWT interceptor)
-                if ([401, 403].includes(err.status)) {
-                    // Let JWT interceptor handle token refresh
-                    return throwError(() => err);
-                }
-                
-                // Handle CORS errors which might appear with various error messages
-                if (err.error instanceof ProgressEvent && err.message.includes('Unknown Error')) {
-                    return throwError(() => new Error('Cross-origin request blocked: Check network settings.'));
-                }
-                
-                // Handle API errors with messages
-                if (err.error?.message) {
-                    return throwError(() => new Error(err.error.message));
-                }
-            }
 
-            // For other errors, return the error message or a generic one
-            const error = err.error?.message || err.statusText || 'Unknown error';
-            return throwError(() => new Error(error));
-        }));
+                if (error.status === 404) {
+                    console.log('Request completed:', request.method, request.url);
+                    return throwError(() => new Error('Resource not found'));
+                }
+
+                if (error.status === 400) {
+                    // Handle validation errors
+                    if (error.error?.errors) {
+                        const validationErrors = Object.values(error.error.errors).join(', ');
+                        return throwError(() => new Error(validationErrors));
+                    }
+                    return throwError(() => new Error(error.error?.message || 'Bad request'));
+                }
+
+                // Handle network errors
+                if (error.status === 0) {
+                    return throwError(() => new Error('Network error. Please check your connection and try again.'));
+                }
+
+                // Handle server errors
+                if (error.status >= 500) {
+                    return throwError(() => new Error('Server error. Please try again later.'));
+                }
+
+                // Default error message
+                console.log('Error details:', error.error);
+                const errorMessage = error.error?.message || error.statusText || 'Something went wrong';
+                return throwError(() => new Error(errorMessage));
+            })
+        );
     }
 }

@@ -1,13 +1,21 @@
 import { Department } from './department';
 
-export interface Employee {
-    id?: string;
-    employeeId: string;
-    userId: string;
-    position: string;
-    departmentId: string;
+export class Employee {
+    id?: number;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    departmentId?: number;
+    position?: string;
+    hireDate?: Date;
+    phone?: string;
+    status?: 'Active' | 'Inactive';
+    created?: Date;
+    updated?: Date;
+    
+    // Navigation properties
     department?: Department;
-    hireDate: Date | string;
-    status: string;
-    user?: any; // Reference to the user account
+    
+    // UI properties
+    isDeleting?: boolean;
 } 
