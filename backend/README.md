@@ -1,18 +1,27 @@
-# User Management Application - Backend
+# User Management System - Backend
 
 ## Overview
 
-This is the Node.js backend for the User Management Full Stack Application. It provides a RESTful API for managing users, employees, departments, workflows, and requests. The backend includes authentication, authorization, and email verification functionality.
+This is the Node.js backend for the User Management System. It provides a RESTful API for managing users, employees, departments, workflows, and requests. The backend implements secure authentication, authorization, email verification, and data management functionality.
 
-## Features
+## Technology Stack
 
-- JWT authentication with refresh tokens
-- Role-based access control
+- **Node.js** with Express
+- **MySQL/PostgreSQL** database with Sequelize ORM
+- **JWT** for authentication with refresh tokens
+- **bcryptjs** for password hashing
+- **Nodemailer** for email services
+- **Swagger UI Express** for API documentation
+
+## Core Features
+
+- JWT authentication with refresh token mechanism
+- Role-based access control (Admin vs User roles)
 - Email verification for user registration
 - Password reset functionality
-- CRUD operations for users, employees, departments, workflows, and requests
-- MySQL database integration with Sequelize ORM
-- Swagger API documentation
+- CRUD operations for users, employees, departments, and requests
+- Workflow management and approval system
+- API documentation with Swagger
 
 ## API Endpoints
 
@@ -75,10 +84,6 @@ This is the Node.js backend for the User Management Full Stack Application. It p
 - `GET /accounts/analytics/user-stats` - Get user statistics (Admin only)
 - `GET /accounts/analytics/online-users` - Get online users (Admin only)
 
-### Utility Endpoints
-
-- `GET /public-test` - Test API connectivity (public access)
-
 ## Project Structure
 
 - `/accounts` - Account management and authentication logic
@@ -92,7 +97,7 @@ This is the Node.js backend for the User Management Full Stack Application. It p
 - `config.json` - Application configuration
 - `swagger.yaml` - API documentation
 
-## Database Model
+## Database Models
 
 - `Account` - User account information
 - `Employee` - Employee information linked to user accounts
@@ -101,7 +106,14 @@ This is the Node.js backend for the User Management Full Stack Application. It p
 - `Request` - Employee requests (equipment, leaves, etc.)
 - `RefreshToken` - JWT refresh tokens for authentication
 
-## Setup and Configuration
+## Setup and Deployment
+
+### Prerequisites
+
+- Node.js (v14 or later)
+- MySQL or PostgreSQL database
+
+### Installation
 
 1. Install dependencies:
    ```
@@ -113,6 +125,11 @@ This is the Node.js backend for the User Management Full Stack Application. It p
 3. Start the server:
    ```
    npm start
+   ```
+
+4. For development with auto-reload:
+   ```
+   npm run dev
    ```
 
 ## API Documentation
@@ -130,10 +147,6 @@ Swagger documentation is available at `/api-docs` when the server is running.
 - `EMAIL_USERNAME` - SMTP username
 - `EMAIL_PASSWORD` - SMTP password
 
-## Development
+## Docker Support
 
-For development, the server runs on port 4000 by default.
-
-## Production
-
-For production deployment, set `NODE_ENV=production` and the server will run on port 80 or the port specified in the `PORT` environment variable.
+The project includes a Dockerfile for containerized deployment.

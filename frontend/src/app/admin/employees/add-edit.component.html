@@ -1,6 +1,6 @@
-<h1>{{title}}</h1>
+<h1 class="text-light">{{title}}</h1>
 <div class="card">
-    <div class="card-header">{{title}}</div>
+    <div class="card-header bg-dark text-white">{{title}}</div>
     <div class="card-body">
         <div *ngIf="errorMessage" class="alert alert-danger">{{errorMessage}}</div>
         <form *ngIf="!loading" [formGroup]="form" (ngSubmit)="onSubmit()">
@@ -62,11 +62,11 @@
                     <span *ngIf="submitting" class="spinner-border spinner-border-sm me-1"></span>
                     Save
                 </button>
-                <button type="button" (click)="onCancel()" class="btn btn-secondary">Cancel</button>
+                <button type="button" (click)="onCancel()" class="btn btn-outline-light">Cancel</button>
             </div>
         </form>
         <div *ngIf="loading" class="text-center">
-            <span class="spinner-border spinner-border-lg align-center"></span>
+            <span class="spinner-border spinner-border-lg align-center text-primary"></span>
         </div>
     </div>
 </div> 

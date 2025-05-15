@@ -13,7 +13,7 @@ const routes: Routes = [
     {
         path: '', component: LayoutComponent,
         children: [
-            { path: '', component: OverViewComponent },
+            { path: '', redirectTo: 'accounts', pathMatch: 'full' },
             { path: 'accounts', loadChildren: accountsModule },
             { path: 'employees', loadChildren: employeesModule },
             { path: 'departments', loadChildren: departmentsModule },
