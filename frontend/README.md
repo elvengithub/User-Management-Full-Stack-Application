@@ -85,13 +85,19 @@ This is the frontend application for a comprehensive User Management System buil
 
 1. Install dependencies:
    ```
-   npm install
+    npm install -g @angular/cli
+    cd frontend
+    npm install
    ```
 
 2. Start the development server:
    ```
+   ng serve
    npm start
    ```
+   if naay problem, wa na install ang angular
+   npm install -g @angular/cli
+
 
 3. Navigate to `http://localhost:4200/`
 
